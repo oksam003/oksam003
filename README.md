@@ -1,3 +1,4 @@
+[![Typing SVG](https://readme-typing-svg.demolab.com?font=Courgette&pause=1000&width=435&lines=Hello!+Welcome+to+my+World+%3A))](https://git.io/typing-svg)
 <h1 align="center">Hi 👋, I'm Samuel Olanrewaju Okoosi</h1>
 <h3 align="center">A passionate software Developer from Nigeria</h3>
 
