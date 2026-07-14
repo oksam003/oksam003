@@ -31,7 +31,18 @@ export default function Tweet({ tweet }) {
             target="_blank"
             rel="noreferrer"
           >
-            <div className="project-thumb">🚀</div>
+            <div className="project-thumb">
+              {project.image ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={project.image}
+                  alt={project.title}
+                  loading="lazy"
+                />
+              ) : (
+                "🚀"
+              )}
+            </div>
             <div className="project-info">
               <div className="project-title">{project.title}</div>
               <div className="project-desc">{project.desc}</div>

@@ -42,42 +42,64 @@ export const tweets = [
   },
   {
     id: 3,
+    time: "8h",
+    project: {
+      title: "Mae Car Dealership",
+      desc: "A modern car dealership platform — browse inventory, filter by make/model/price, book test drives, and manage listings. Built with React, Node.js & MongoDB.",
+      tech: ["React", "Node.js", "MongoDB", "Stripe"],
+      image:
+        "https://images.unsplash.com/photo-1567818735868-e71b99932e29?w=800&q=80&auto=format&fit=crop",
+      link: "https://github.com/oksam003",
+    },
+    content:
+      "🚗 Introducing Mae Car Dealership — my latest full-stack project. Browse cars, filter, and book test drives right from the app. Here's a look 👇",
+    tags: ["#cardealership", "#fullstack", "#react"],
+    stats: { replies: 42, retweets: 88, likes: 401 },
+  },
+  {
+    id: 4,
     time: "1d",
     project: {
       title: "E-Commerce Platform",
       desc: "Full-stack shopping app with cart, auth, and payment flow. Built with React + Node.js + MongoDB.",
       tech: ["React", "Node.js", "MongoDB"],
+      image:
+        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80&auto=format&fit=crop",
       link: "https://github.com/oksam003",
     },
     content: "🚀 Shipped a full-stack e-commerce platform. Here's a peek 👇",
     stats: { replies: 18, retweets: 44, likes: 189 },
   },
   {
-    id: 4,
+    id: 5,
     time: "3d",
     project: {
       title: "Task Manager App",
       desc: "A productivity app to organize tasks with drag-and-drop, filtering, and persistent storage.",
       tech: ["React", "CSS", "LocalStorage"],
+      image:
+        "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&q=80&auto=format&fit=crop",
       link: "https://github.com/oksam003",
     },
     content: "✅ Built a sleek task manager to stay organized. Clean UI, smooth UX.",
     stats: { replies: 9, retweets: 21, likes: 98 },
   },
   {
-    id: 5,
+    id: 6,
     time: "5d",
     project: {
       title: "Portfolio API",
       desc: "REST API serving portfolio data with Python. JWT auth and PostgreSQL storage.",
       tech: ["Python", "PostgreSQL", "REST"],
+      image:
+        "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80&auto=format&fit=crop",
       link: "https://github.com/oksam003",
     },
     content: "🐍 A Python-powered REST API backing my projects.",
     stats: { replies: 7, retweets: 15, likes: 76 },
   },
   {
-    id: 6,
+    id: 7,
     time: "1w",
     content:
       "🎌 Fun fact: outside of coding, I'm a huge anime fan. It keeps the creativity flowing. What's everyone watching this season?",
