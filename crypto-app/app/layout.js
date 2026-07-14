@@ -1,6 +1,7 @@
 import "./globals.css";
 import { WalletProvider } from "./WalletContext";
 import Header from "./components/Header";
+import AIBot from "./components/AIBot";
 
 export const metadata = {
   title: "NexBit — Crypto & Meme Coin Trading",
@@ -15,11 +16,7 @@ export default function RootLayout({ children }) {
         <WalletProvider>
           <Header />
           {children}
-          <div className="disclaimer">
-            ⚠️ Demo application for portfolio purposes. Trades are simulated with
-            a virtual balance — no real funds are involved. Live prices via
-            CoinGecko.
-          </div>
+          <AIBot />
         </WalletProvider>
       </body>
     </html>

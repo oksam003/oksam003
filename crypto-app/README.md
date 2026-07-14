@@ -2,7 +2,7 @@
 
 A Bybit-inspired cryptocurrency exchange interface with **spot trading**, a dedicated **meme-coin zone**, live prices, an interactive **TradingView-style candlestick chart**, an order book, and a simulated wallet with order history. Built with **Next.js 16** (App Router).
 
-> ⚠️ **Demo / portfolio project.** Trades are simulated against a virtual 100,000 USDT balance — no real funds, accounts, or KYC. Real-exchange integration points are marked in the code (search for `REAL-TRADING HOOK`).
+Market data (prices, volume, 24h change, meme coins) is **real and live** from the CoinGecko API. Order execution runs against a virtual balance for now; real-exchange integration points are marked in the code (search for `REAL-TRADING HOOK`).
 
 ## ✨ Features
 
@@ -11,6 +11,7 @@ A Bybit-inspired cryptocurrency exchange interface with **spot trading**, a dedi
 - **Trade view** — live price header, interactive **TradingView-style candlestick chart** (timeframes, crosshair, OHLC readout, volume pane), animated order book, and a Buy/Sell order form with 25/50/75/100% sizing
 - **Simulated wallet** — buy/sell updates balances & holdings, persisted in `localStorage`
 - **Assets/Portfolio** — total equity, P&L, holdings valued at live prices, and full order history
+- **NexBit AI** — an in-app assistant that answers with live prices, top gainers/losers, meme-coin lists, and trading help
 - **Bybit-style dark theme** — gold accent, green/red price coloring, fully responsive
 
 ## 🔌 Data

@@ -9,7 +9,7 @@ export default function Header() {
   return (
     <header className="header">
       <Link href="/" className="brand">
-        Nex<span className="dot">Bit</span>
+        <span className="logo-mark">◆</span>NexBit
       </Link>
       <nav className="nav">
         <Link href="/">Markets</Link>
