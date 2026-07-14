@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import { useWallet } from "../WalletContext";
+import { useAuth } from "../AuthContext";
 import { fmtNum } from "../../lib/format";
 
 export default function Header() {
   const { wallet, ready } = useWallet();
+  const { user, logout } = useAuth();
   return (
     <header className="header">
       <Link href="/" className="brand">
-        <span className="logo-mark">◆</span>NexBit
+        <span className="logo-mark">◆</span>Nexa
       </Link>
       <nav className="nav">
         <Link href="/">Markets</Link>
@@ -23,12 +25,26 @@ export default function Header() {
         <span className="balance-pill">
           Balance: <b>{ready ? fmtNum(wallet.usdt) : "…"}</b> USDT
         </span>
-        <Link href="/assets" className="btn btn-ghost">
-          Portfolio
-        </Link>
-        <Link href="/trade/bitcoin" className="btn btn-gold">
-          Trade Now
-        </Link>
+        {user ? (
+          <>
+            <Link href="/assets" className="user-chip" title={user.email}>
+              <span className="user-av">{user.initial}</span>
+              {user.name}
+            </Link>
+            <button className="btn btn-ghost" onClick={logout}>
+              Log Out
+            </button>
+          </>
+        ) : (
+          <>
+            <Link href="/login" className="btn btn-ghost">
+              Log In
+            </Link>
+            <Link href="/login" className="btn btn-gold">
+              Sign Up
+            </Link>
+          </>
+        )}
       </div>
     </header>
   );

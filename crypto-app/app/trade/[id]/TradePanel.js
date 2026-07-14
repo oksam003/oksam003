@@ -4,11 +4,21 @@ import { useEffect, useMemo, useState } from "react";
 import { useWallet } from "../../WalletContext";
 import { fmtPrice, fmtPct, fmtNum } from "../../../lib/format";
 import CandleChart from "../../components/CandleChart";
+import { useLivePrice } from "../../components/useLivePrice";
 
 export default function TradePanel({ coin }) {
   const { wallet, ready, placeOrder } = useWallet();
-  const up = (coin.change24h ?? 0) >= 0;
   const symUpper = coin.symbol.toUpperCase();
+
+  // Real-time price via Binance WebSocket, seeded with the API price.
+  const { price: livePrice, change: liveChange, dir, live } = useLivePrice(
+    coin.symbol,
+    coin.price,
+    coin.change24h
+  );
+  const price = livePrice ?? coin.price;
+  const change24h = liveChange ?? coin.change24h;
+  const up = (change24h ?? 0) >= 0;
 
   return (
     <main className="container">
@@ -27,11 +37,22 @@ export default function TradePanel({ coin }) {
           </div>
           <div className="coin-sym">{coin.name}</div>
         </div>
-        <div className={`px-lg mono ${up ? "green" : "red"}`}>
-          {fmtPrice(coin.price)}
+        <div
+          className={`px-lg mono ${up ? "green" : "red"}`}
+          style={{
+            transition: "color 0.15s",
+            color: dir > 0 ? "var(--green)" : dir < 0 ? "var(--red)" : undefined,
+          }}
+        >
+          {fmtPrice(price)}
         </div>
-        <div style={{ display: "flex", gap: 24, marginLeft: 12 }}>
-          <Stat label="24h Change" value={fmtPct(coin.change24h)} cls={up ? "green" : "red"} />
+        <div style={{ display: "flex", gap: 24, marginLeft: 12, alignItems: "center" }}>
+          {live && (
+            <span className="live-tag">
+              <span className="dot-live" /> LIVE
+            </span>
+          )}
+          <Stat label="24h Change" value={fmtPct(change24h)} cls={up ? "green" : "red"} />
           <Stat label="24h High" value={fmtPrice(coin.high)} />
           <Stat label="24h Low" value={fmtPrice(coin.low)} />
           <Stat label="24h Volume" value={fmtNum(coin.volume)} />
@@ -40,9 +61,10 @@ export default function TradePanel({ coin }) {
 
       <div className="trade-grid">
         <CandleChart spark={coin.spark} />
-        <OrderBook price={coin.price} />
+        <OrderBook price={price} />
         <OrderForm
           coin={coin}
+          price={price}
           symUpper={symUpper}
           wallet={wallet}
           ready={ready}
@@ -127,12 +149,11 @@ function OrderBook({ price }) {
   );
 }
 
-function OrderForm({ coin, symUpper, wallet, ready, placeOrder }) {
+function OrderForm({ coin, price, symUpper, wallet, ready, placeOrder }) {
   const [side, setSide] = useState("buy");
   const [amount, setAmount] = useState("");
   const [toast, setToast] = useState(null);
 
-  const price = coin.price;
   const held = wallet.holdings[coin.id] || 0;
   const total = useMemo(() => (Number(amount) || 0) * price, [amount, price]);
 

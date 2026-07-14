@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { getMarkets } from "../../lib/api";
 import { fmtPrice, fmtPct, fmtNum } from "../../lib/format";
 
-// NexBit AI — an in-app assistant. It answers from LIVE market data fetched
+// Nexa AI — an in-app assistant. It answers from LIVE market data fetched
 // from the CoinGecko API (prices, gainers, losers, meme coins) and helps
 // users navigate the exchange.
 export default function AIBot() {
@@ -14,7 +14,7 @@ export default function AIBot() {
   const [msgs, setMsgs] = useState([
     {
       from: "bot",
-      text: "👋 Hi, I'm NexBit AI. Ask me for a live price (e.g. \"price of bitcoin\"), \"top gainers\", \"meme coins\", or how to trade.",
+      text: "👋 Hi, I'm Nexa AI. Ask me for a live price (e.g. \"price of bitcoin\"), \"top gainers\", \"meme coins\", or how to trade.",
     },
   ]);
   const [thinking, setThinking] = useState(false);
@@ -52,7 +52,7 @@ export default function AIBot() {
       <button
         className="bot-fab"
         onClick={() => setOpen((o) => !o)}
-        aria-label="Open NexBit AI"
+        aria-label="Open Nexa AI"
       >
         {open ? "✕" : "🤖"}
       </button>
@@ -62,7 +62,7 @@ export default function AIBot() {
           <div className="bot-head">
             <span className="bot-avatar">🤖</span>
             <div>
-              <div className="bot-title">NexBit AI</div>
+              <div className="bot-title">Nexa AI</div>
               <div className="bot-status">
                 <span className="dot-live" /> Live market data
               </div>
@@ -75,7 +75,7 @@ export default function AIBot() {
                 {m.text}
               </div>
             ))}
-            {thinking && <div className="bot-msg bot typing">NexBit AI is typing…</div>}
+            {thinking && <div className="bot-msg bot typing">Nexa AI is typing…</div>}
           </div>
 
           <div className="bot-chips">
@@ -96,7 +96,7 @@ export default function AIBot() {
             <input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Ask NexBit AI…"
+              placeholder="Ask Nexa AI…"
             />
             <button type="submit">➤</button>
           </form>

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getMarkets } from "../lib/api";
 import MarketTable from "./components/MarketTable";
-import { fmtPrice, fmtPct } from "../lib/format";
+import LiveTicker from "./components/LiveTicker";
 
 export const revalidate = 30; // refresh market data every 30s
 
@@ -11,20 +11,7 @@ export default async function Home() {
 
   return (
     <main className="container">
-      <div className="ticker">
-        {top.map((c) => {
-          const up = (c.price_change_percentage_24h ?? 0) >= 0;
-          return (
-            <Link key={c.id} href={`/trade/${c.id}`} className="ticker-card">
-              <div className="sym">{c.symbol.toUpperCase()}/USDT</div>
-              <div className="px mono">{fmtPrice(c.current_price)}</div>
-              <div className={`mono ${up ? "green" : "red"}`}>
-                {fmtPct(c.price_change_percentage_24h)}
-              </div>
-            </Link>
-          );
-        })}
-      </div>
+      <LiveTicker coins={top} />
 
       <h1 className="page-title">Markets</h1>
       <p className="page-sub">
