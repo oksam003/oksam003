@@ -42,6 +42,22 @@ export const tweets = [
   },
   {
     id: 3,
+    time: "1h",
+    project: {
+      title: "NexBit — Crypto Exchange",
+      desc: "A Bybit-style crypto & meme-coin trading platform with live prices, a TradingView-style candlestick chart, order book, and a simulated wallet. Built with Next.js 16.",
+      tech: ["Next.js", "React", "CoinGecko API", "SVG Charts"],
+      image:
+        "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&q=80&auto=format&fit=crop",
+      link: "https://github.com/oksam003/oksam003/tree/main/crypto-app",
+    },
+    content:
+      "🚀 Just shipped NexBit — a full crypto exchange with spot + meme-coin trading, live market data, and an interactive candlestick chart. Trade DOGE, PEPE, BTC & more 📈",
+    tags: ["#crypto", "#nextjs", "#trading", "#memecoins"],
+    stats: { replies: 51, retweets: 132, likes: 587 },
+  },
+  {
+    id: 4,
     time: "8h",
     project: {
       title: "Mae Car Dealership",
@@ -57,7 +73,7 @@ export const tweets = [
     stats: { replies: 42, retweets: 88, likes: 401 },
   },
   {
-    id: 4,
+    id: 5,
     time: "1d",
     project: {
       title: "E-Commerce Platform",
@@ -71,7 +87,7 @@ export const tweets = [
     stats: { replies: 18, retweets: 44, likes: 189 },
   },
   {
-    id: 5,
+    id: 6,
     time: "3d",
     project: {
       title: "Task Manager App",
@@ -85,7 +101,7 @@ export const tweets = [
     stats: { replies: 9, retweets: 21, likes: 98 },
   },
   {
-    id: 6,
+    id: 7,
     time: "5d",
     project: {
       title: "Portfolio API",
@@ -99,7 +115,7 @@ export const tweets = [
     stats: { replies: 7, retweets: 15, likes: 76 },
   },
   {
-    id: 7,
+    id: 8,
     time: "1w",
     content:
       "🎌 Fun fact: outside of coding, I'm a huge anime fan. It keeps the creativity flowing. What's everyone watching this season?",

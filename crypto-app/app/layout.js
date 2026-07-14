@@ -3,7 +3,7 @@ import { WalletProvider } from "./WalletContext";
 import Header from "./components/Header";
 
 export const metadata = {
-  title: "BitFlex — Crypto & Meme Coin Trading",
+  title: "NexBit — Crypto & Meme Coin Trading",
   description:
     "A Bybit-style crypto exchange demo: spot trading for major coins and meme coins with live prices.",
 };

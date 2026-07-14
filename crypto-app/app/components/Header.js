@@ -9,7 +9,7 @@ export default function Header() {
   return (
     <header className="header">
       <Link href="/" className="brand">
-        Bit<span className="dot">Flex</span>
+        Nex<span className="dot">Bit</span>
       </Link>
       <nav className="nav">
         <Link href="/">Markets</Link>

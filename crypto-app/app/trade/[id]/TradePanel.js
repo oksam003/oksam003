@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useWallet } from "../../WalletContext";
 import { fmtPrice, fmtPct, fmtNum } from "../../../lib/format";
+import CandleChart from "../../components/CandleChart";
 
 export default function TradePanel({ coin }) {
   const { wallet, ready, placeOrder } = useWallet();
@@ -38,7 +39,7 @@ export default function TradePanel({ coin }) {
       </div>
 
       <div className="trade-grid">
-        <Chart spark={coin.spark} up={up} />
+        <CandleChart spark={coin.spark} />
         <OrderBook price={coin.price} />
         <OrderForm
           coin={coin}
@@ -58,38 +59,6 @@ function Stat({ label, value, cls }) {
       <div className="coin-sym">{label}</div>
       <div className={`mono ${cls || ""}`} style={{ fontWeight: 700 }}>
         {value}
-      </div>
-    </div>
-  );
-}
-
-function Chart({ spark, up }) {
-  const bars = spark.length ? spark : [];
-  const min = Math.min(...bars);
-  const max = Math.max(...bars);
-  const range = max - min || 1;
-  return (
-    <div className="panel">
-      <div style={{ fontWeight: 700, marginBottom: 4 }}>Price Chart · 7D</div>
-      <div className="coin-sym">Simulated candles from live sparkline data</div>
-      <div className="chart-box">
-        {bars.map((v, i) => {
-          const hPct = ((v - min) / range) * 90 + 8;
-          const rising = i === 0 || v >= bars[i - 1];
-          return (
-            <div
-              key={i}
-              style={{
-                flex: 1,
-                height: `${hPct}%`,
-                margin: "0 1px",
-                borderRadius: 2,
-                background: rising ? "var(--green)" : "var(--red)",
-                opacity: 0.85,
-              }}
-            />
-          );
-        })}
       </div>
     </div>
   );

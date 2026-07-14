@@ -1,6 +1,6 @@
-# ⚡ BitFlex — Crypto & Meme Coin Trading (Bybit-style demo)
+# ⚡ NexBit — Crypto & Meme Coin Trading (Bybit-style demo)
 
-A Bybit-inspired cryptocurrency exchange interface with **spot trading**, a dedicated **meme-coin zone**, live prices, an order book, and a simulated wallet with order history. Built with **Next.js 16** (App Router).
+A Bybit-inspired cryptocurrency exchange interface with **spot trading**, a dedicated **meme-coin zone**, live prices, an interactive **TradingView-style candlestick chart**, an order book, and a simulated wallet with order history. Built with **Next.js 16** (App Router).
 
 > ⚠️ **Demo / portfolio project.** Trades are simulated against a virtual 100,000 USDT balance — no real funds, accounts, or KYC. Real-exchange integration points are marked in the code (search for `REAL-TRADING HOOK`).
 
@@ -8,7 +8,7 @@ A Bybit-inspired cryptocurrency exchange interface with **spot trading**, a dedi
 
 - **Markets** — top coins with live price, 1h/24h change, volume, and 7-day sparklines
 - **🐕 Meme Coin Zone** — DOGE, SHIB, PEPE, WIF, BONK & friends (CoinGecko `meme-token` category)
-- **Trade view** — live price header, candle-style chart, animated order book, and a Buy/Sell order form with 25/50/75/100% sizing
+- **Trade view** — live price header, interactive **TradingView-style candlestick chart** (timeframes, crosshair, OHLC readout, volume pane), animated order book, and a Buy/Sell order form with 25/50/75/100% sizing
 - **Simulated wallet** — buy/sell updates balances & holdings, persisted in `localStorage`
 - **Assets/Portfolio** — total equity, P&L, holdings valued at live prices, and full order history
 - **Bybit-style dark theme** — gold accent, green/red price coloring, fully responsive
