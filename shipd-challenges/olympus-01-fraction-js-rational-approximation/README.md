@@ -18,22 +18,28 @@ brute-force search.
 | `approach.md` | Reference-solution explanation |
 | `meta.md` | Repo, pinned commit, category, field mapping, verified status |
 
-## Fixes applied vs the earlier attempt
+## Fixes applied across review rounds
 
 - Switched to an actively maintained, permissive, 500+ star repo (was the stale
   `expr-eval`).
-- `test.sh` now lives inside the test patch at the repo root, mode `100755`,
-  and supports `base` and `new` modes so the grader can select or deselect the
-  newly added tests. It installs nothing (the Dockerfile does).
-- Category is `feature_request` (two brand-new methods).
-- Description is plain ASCII with no em-dashes and no manual mid-sentence line
-  wrapping.
+- `test.sh` lives inside the test patch at the repo root, mode `100755`,
+  supports `base` and `new` modes, and now propagates mocha's exit code
+  (non-zero on failure) instead of always exiting 0. It installs nothing.
+- Test file renamed to `tests/approximate_5545d6.test.js` (random hash) so it
+  cannot collide with an implementer's predictable filename.
+- Added an explicit equal-distance tie-break test and tests asserting the two
+  new methods appear in the TypeScript definitions.
+- Dockerfile runs only `npm install`, not the build: `crude-build` rewrites
+  `src/fraction.js`, which would otherwise dirty the tree and break the
+  solution patch. `test.sh` builds after patches are applied.
+- Category is `feature_request`; description is plain ASCII, no em-dashes, no
+  manual mid-sentence line wrapping.
 
 ## Verified
 
-Fresh clone at commit `9aa0f35`, LF working tree:
+Fresh clone at commit `9aa0f35`, LF working tree, patches applied before build:
 
-- test.patch only: base tests 314 passing, new tests 12 failing.
-- test.patch + solution.patch: new tests 13 passing, full suite 327 passing.
+- test.patch only: base tests 314 passing, new tests 15 failing.
+- test.patch + solution.patch: new tests 16 passing, full suite 330 passing.
 
-See `meta.md` for exact commands and the note on the rollout difficulty gates.
+See `meta.md` for exact commands, the build-order note, and the rollout gates.

@@ -35,29 +35,37 @@ Reproduced on a fresh clone at the pinned commit, with an LF working tree
 (as on the Linux grader):
 
 - `test.patch` applies cleanly and adds `test.sh` (mode 100755) plus
-  `tests/approximate.test.js`.
-- Base tests only: 314 passing. New tests only (before solution): 12 failing.
-- After `solution.patch`: new suite 13 passing, full suite 327 passing.
+  `tests/approximate_5545d6.test.js`.
+- Base tests only: 314 passing. New tests only (before solution): 15 failing.
+- After `solution.patch`: new suite 16 passing, full suite 330 passing.
 
-`test.sh` selects tests by mode:
+`test.sh` selects tests by mode and propagates mocha's exit code:
 
 - `test.sh base --output_path <p>` runs only the pre-existing tests.
 - `test.sh new  --output_path <p>` runs only the added tests.
 - `test.sh all  --output_path <p>` (default) runs everything.
 
-It writes JUnit XML via mocha's `xunit` reporter and never installs packages
-(the Dockerfile does that).
+It writes JUnit XML via mocha's `xunit` reporter, exits with mocha's own status
+(non-zero on any failure), and never installs packages (the Dockerfile does).
+
+## Important build-order note
+
+`npm run build` (crude-build) rewrites `src/fraction.js` by stamping a
+version/date header. The Dockerfile therefore only runs `npm install`, NOT the
+build, so the repo tree stays pristine and `solution.patch` applies cleanly.
+`test.sh` runs the build after the patches are applied. When reproducing, apply
+the patches BEFORE building.
 
 ## Reproduce locally
 
 ```bash
 git -c core.autocrlf=false clone https://github.com/rawify/Fraction.js && cd Fraction.js
 git checkout 9aa0f355e5d6c25d10bce7a7ab25a3a4bd074942
-git apply /path/to/test.patch
-npm install && npm run build
-npx mocha tests/approximate.test.js   # fails: feature missing
-git apply /path/to/solution.patch
-npm run build && npx mocha tests/*.js # 327 passing
+npm install
+git apply /path/to/test.patch                 # base passes, new fails
+git apply /path/to/solution.patch              # apply BEFORE building
+npm run build
+npx mocha tests/*.js                           # 330 passing
 ```
 
 ## Note on difficulty gates

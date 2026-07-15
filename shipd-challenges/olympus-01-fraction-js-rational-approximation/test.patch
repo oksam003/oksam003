@@ -1,9 +1,9 @@
 diff --git a/test.sh b/test.sh
 new file mode 100755
-index 0000000..a3c09b6
+index 0000000..4cefa53
 --- /dev/null
 +++ b/test.sh
-@@ -0,0 +1,56 @@
+@@ -0,0 +1,57 @@
 +#!/usr/bin/env bash
 +# Shipd test runner for Fraction.js.
 +#
@@ -15,8 +15,9 @@ index 0000000..a3c09b6
 +#   new  -> run only the tests added by this problem
 +#   all  -> run the whole suite (default)
 +#
-+# Writes JUnit XML to <path> via mocha's xunit reporter. Package installation
-+# happens in the Dockerfile, not here.
++# Writes JUnit XML to <path> via mocha's xunit reporter and exits with mocha's
++# own status so test failures are visible through the process exit code.
++# Package installation happens in the Dockerfile, not here.
 +set -u
 +
 +MODE="all"
@@ -39,9 +40,10 @@ index 0000000..a3c09b6
 +fi
 +
 +# Rebuild dist/ from the (possibly patched) src so tests import current code.
-+npm run build >/dev/null 2>&1 || true
++# Building is not a package install; it just regenerates dist/fraction.js.
++npm run build >/dev/null 2>&1
 +
-+NEW_TEST="tests/approximate.test.js"
++NEW_TEST="tests/approximate_5545d6.test.js"
 +
 +case "$MODE" in
 +  new)
@@ -55,17 +57,16 @@ index 0000000..a3c09b6
 +    ;;
 +esac
 +
-+# Always emit the JUnit report, even on test failures, so the grader can read
-+# the per-test breakdown.
-+npx mocha $FILES --reporter xunit --reporter-options output="$OUTPUT_PATH" || true
-+
-+exit 0
-diff --git a/tests/approximate.test.js b/tests/approximate.test.js
++# Run the tests. mocha writes the JUnit report even on failures and exits
++# non-zero when any test fails; propagate that status.
++npx mocha $FILES --reporter xunit --reporter-options output="$OUTPUT_PATH"
++exit $?
+diff --git a/tests/approximate_5545d6.test.js b/tests/approximate_5545d6.test.js
 new file mode 100644
-index 0000000..847e0d0
+index 0000000..48c4427
 --- /dev/null
-+++ b/tests/approximate.test.js
-@@ -0,0 +1,159 @@
++++ b/tests/approximate_5545d6.test.js
+@@ -0,0 +1,193 @@
 +'use strict';
 +
 +const assert = require('assert');
@@ -174,9 +175,43 @@ index 0000000..847e0d0
 +    });
 +  });
 +
++  it('breaks exact-distance ties toward the smaller denominator', function () {
++    // 5/12 sits exactly halfway between 1/3 and 1/2 (both 1/12 away). With a
++    // denominator budget of 3 the two candidates are equidistant, so the one
++    // with the smaller denominator (1/2) must win.
++    const x = new Fraction(5, 12);
++    const got = x.approximate(3);
++    assert.ok(got.equals(new Fraction(1, 2)), 'got ' + got.toFraction());
++    assert.strictEqual(got.d, 2n);
++
++    // Symmetric negative case.
++    assert.ok(new Fraction(-5, 12).approximate(3).equals(new Fraction(-1, 2)));
++  });
++
 +  it('throws on an invalid limit', function () {
 +    assert.throws(function () { new Fraction(Math.PI).approximate(0); });
 +    assert.throws(function () { new Fraction(Math.PI).approximate(-5); });
++  });
++});
++
++describe('TypeScript definitions', function () {
++  const fs = require('fs');
++  const path = require('path');
++
++  function read(file) {
++    return fs.readFileSync(path.resolve(__dirname, '..', file), 'utf8');
++  }
++
++  it('declares the new methods in fraction.d.ts', function () {
++    const dts = read('fraction.d.ts');
++    assert.ok(/approximate\s*\(/.test(dts), 'fraction.d.ts must declare approximate');
++    assert.ok(/convergents\s*\(/.test(dts), 'fraction.d.ts must declare convergents');
++  });
++
++  it('declares the new methods in fraction.d.mts', function () {
++    const mts = read('fraction.d.mts');
++    assert.ok(/approximate\s*\(/.test(mts), 'fraction.d.mts must declare approximate');
++    assert.ok(/convergents\s*\(/.test(mts), 'fraction.d.mts must declare convergents');
 +  });
 +});
 +
