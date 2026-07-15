@@ -3,12 +3,16 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useWallet } from "../WalletContext";
+import { useAuth } from "../AuthContext";
 import { getMarkets } from "../../lib/api";
 import { fmtPrice, fmtNum } from "../../lib/format";
 
 export default function AssetsPage() {
-  const { wallet, ready, reset } = useWallet();
+  const { wallet, ready, reset, deposit } = useWallet();
+  const { user } = useAuth();
   const [prices, setPrices] = useState({});
+  const [depOpen, setDepOpen] = useState(false);
+  const [depAmt, setDepAmt] = useState("");
 
   useEffect(() => {
     getMarkets({ perPage: 100 }).then((coins) => {
@@ -24,18 +28,76 @@ export default function AssetsPage() {
     0
   );
   const totalEquity = wallet.usdt + holdingsValue;
-  const START = 100000;
-  const pnl = totalEquity - START;
+  const deposited = wallet.deposited || 0;
+  const pnl = totalEquity - deposited;
+
+  if (!user) {
+    return (
+      <main className="container">
+        <div className="empty" style={{ padding: 80 }}>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🔒</div>
+          <div style={{ fontSize: 18, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
+            Log in to view your assets
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            Your balance and holdings are tied to your account.
+          </div>
+          <Link href="/login" className="btn btn-gold">
+            Log In / Sign Up
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  function doDeposit() {
+    const res = deposit(depAmt);
+    if (res.ok) {
+      setDepAmt("");
+      setDepOpen(false);
+    }
+  }
 
   return (
     <main className="container">
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 className="page-title">Assets</h1>
-        <button className="btn btn-ghost" onClick={reset}>
-          Reset Demo Wallet
-        </button>
+        <div style={{ display: "flex", gap: 10 }}>
+          <button className="btn btn-gold" onClick={() => setDepOpen((o) => !o)}>
+            Deposit
+          </button>
+          <button className="btn btn-ghost" onClick={reset}>
+            Reset
+          </button>
+        </div>
       </div>
-      <p className="page-sub">Your simulated portfolio overview.</p>
+      <p className="page-sub">
+        Welcome, {user.name}. Here's your portfolio overview.
+      </p>
+
+      {depOpen && (
+        <div className="deposit-box">
+          <div className="field" style={{ margin: 0, flex: 1 }}>
+            <label>Deposit amount (USDT)</label>
+            <input
+              type="number"
+              placeholder="0.00"
+              value={depAmt}
+              onChange={(e) => setDepAmt(e.target.value)}
+            />
+          </div>
+          <div className="deposit-quick">
+            {[100, 1000, 10000].map((a) => (
+              <button key={a} onClick={() => setDepAmt(String(a))}>
+                +{a.toLocaleString()}
+              </button>
+            ))}
+          </div>
+          <button className="btn btn-gold" onClick={doDeposit}>
+            Confirm Deposit
+          </button>
+        </div>
+      )}
 
       <div className="stat-row">
         <div className="stat">

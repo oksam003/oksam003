@@ -22,9 +22,11 @@ export default function Header() {
         <Link href="/assets">Assets</Link>
       </nav>
       <div className="header-right">
-        <span className="balance-pill">
-          Balance: <b>{ready ? fmtNum(wallet.usdt) : "…"}</b> USDT
-        </span>
+        {user && (
+          <Link href="/assets" className="balance-pill">
+            Balance: <b>{ready ? fmtNum(wallet.usdt) : "…"}</b> USDT
+          </Link>
+        )}
         {user ? (
           <>
             <Link href="/assets" className="user-chip" title={user.email}>

@@ -1,33 +1,53 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
+import { useAuth } from "./AuthContext";
 
-// Simulated wallet + order execution.
+// Per-user wallet + order execution.
+// New accounts start with a real (empty) 0 balance. Users fund via deposit().
 // ── REAL-TRADING HOOK ────────────────────────────────────────────────
-// Replace placeOrder() with an authenticated call to your exchange's
-// order endpoint, and hydrate balances/holdings from the account API
-// instead of localStorage.
+// Replace placeOrder()/deposit() with authenticated calls to your exchange,
+// and hydrate balances/holdings from the account API instead of localStorage.
 // ─────────────────────────────────────────────────────────────────────
 
 const WalletContext = createContext(null);
-const STORAGE_KEY = "bybit_clone_wallet_v1";
-const START_BALANCE = 100000; // demo USDT
+const EMPTY = { usdt: 0, deposited: 0, holdings: {}, orders: [] };
+
+function keyFor(user) {
+  return user ? `nexa_wallet_${user.email}` : "nexa_wallet_guest";
+}
 
 export function WalletProvider({ children }) {
-  const [wallet, setWallet] = useState({ usdt: START_BALANCE, holdings: {}, orders: [] });
+  const { user, ready: authReady } = useAuth();
+  const [wallet, setWallet] = useState(EMPTY);
   const [ready, setReady] = useState(false);
 
+  // Load the wallet for the current user whenever auth state changes.
   useEffect(() => {
+    if (!authReady) return;
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) setWallet(JSON.parse(saved));
-    } catch {}
+      const saved = localStorage.getItem(keyFor(user));
+      setWallet(saved ? JSON.parse(saved) : EMPTY);
+    } catch {
+      setWallet(EMPTY);
+    }
     setReady(true);
-  }, []);
+  }, [user, authReady]);
 
   useEffect(() => {
-    if (ready) localStorage.setItem(STORAGE_KEY, JSON.stringify(wallet));
-  }, [wallet, ready]);
+    if (ready) localStorage.setItem(keyFor(user), JSON.stringify(wallet));
+  }, [wallet, ready, user]);
+
+  function deposit(amount) {
+    const amt = Number(amount);
+    if (!amt || amt <= 0) return { ok: false, error: "Enter a valid amount" };
+    setWallet((w) => ({
+      ...w,
+      usdt: w.usdt + amt,
+      deposited: (w.deposited || 0) + amt,
+    }));
+    return { ok: true };
+  }
 
   function placeOrder({ side, coin, symbol, price, amount }) {
     const cost = price * amount;
@@ -54,11 +74,11 @@ export function WalletProvider({ children }) {
   }
 
   function reset() {
-    setWallet({ usdt: START_BALANCE, holdings: {}, orders: [] });
+    setWallet(EMPTY);
   }
 
   return (
-    <WalletContext.Provider value={{ wallet, ready, placeOrder, reset }}>
+    <WalletContext.Provider value={{ wallet, ready, deposit, placeOrder, reset }}>
       {children}
     </WalletContext.Provider>
   );
