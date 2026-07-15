@@ -313,6 +313,7 @@ a {
   border: 1px solid var(--border);
   border-radius: 16px;
   overflow: hidden;
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
 }
 .project-thumb {
   height: 200px;
@@ -351,6 +352,28 @@ a {
   color: var(--accent);
   padding: 3px 10px;
   border-radius: 9999px;
+}
+
+/* Purple-accented project card (Nexa) */
+.project-card.accent-purple {
+  border-color: rgba(168, 85, 247, 0.55);
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.15),
+    0 8px 26px rgba(168, 85, 247, 0.12);
+}
+.project-card.accent-purple:hover {
+  border-color: #a855f7;
+  box-shadow: 0 0 0 1px rgba(168, 85, 247, 0.35),
+    0 10px 32px rgba(168, 85, 247, 0.25);
+}
+.project-card.accent-purple .project-title {
+  background: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+.project-card.accent-purple .chip {
+  background: rgba(168, 85, 247, 0.14);
+  color: #c084fc;
 }
 
 .tweet-actions {

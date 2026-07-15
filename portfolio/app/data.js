@@ -45,6 +45,7 @@ export const tweets = [
     time: "1h",
     project: {
       title: "Nexa — Crypto Exchange",
+      accent: "purple",
       desc: "A Bybit-style crypto & meme-coin exchange: real-time WebSocket price streaming, a TradingView-style candlestick chart, live order book, user login, deposit/withdraw wallet, an AI trading assistant, and per-account balances & order history. Built with Next.js 16.",
       tech: ["Next.js", "WebSockets", "AI Assistant", "Auth", "SVG Charts"],
       image:

@@ -26,7 +26,7 @@ export default function Tweet({ tweet }) {
 
         {project && (
           <a
-            className="project-card"
+            className={`project-card ${project.accent ? "accent-" + project.accent : ""}`}
             href={project.link}
             target="_blank"
             rel="noreferrer"
