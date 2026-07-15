@@ -6,7 +6,7 @@ Solutions and work for **Shipd** coding challenges — organized by track.
 
 | # | Challenge | Language | Status | Notes |
 |---|-----------|----------|--------|-------|
-| 01 | [expr-eval symbolic differentiation](olympus-01-expr-eval-symbolic-differentiation/) | JavaScript | ✅ verified | Add `Expression.differentiate()` to silentmatt/expr-eval @ `6e889e0`; verified 20 fail → 499 pass |
+| 01 | [Fraction.js rational approximation](olympus-01-fraction-js-rational-approximation/) | JavaScript | ✅ verified | Add `approximate()` + `convergents()` to rawify/Fraction.js @ `9aa0f35` (500+★, MIT, active); test.sh base/new modes; verified 12 fail → 327 pass |
 
 ## 🔴 Mars
 

@@ -1,0 +1,135 @@
+diff --git a/fraction.d.mts b/fraction.d.mts
+index 0604ad7..ebfa7bc 100644
+--- a/fraction.d.mts
++++ b/fraction.d.mts
+@@ -59,6 +59,8 @@ declare class Fraction {
+ 
+     inverse(): Fraction;
+     simplify(eps?: number): Fraction;
++    approximate(limit: number | bigint): Fraction;
++    convergents(): Fraction[];
+ 
+     equals(num: FractionInput): boolean;
+     lt(num: FractionInput): boolean;
+diff --git a/fraction.d.ts b/fraction.d.ts
+index 97222b9..3491b1f 100644
+--- a/fraction.d.ts
++++ b/fraction.d.ts
+@@ -29,6 +29,8 @@ declare class Fraction {
+ 
+   inverse(): Fraction;
+   simplify(eps?: number): Fraction;
++  approximate(limit: number | bigint): Fraction;
++  convergents(): Fraction[];
+ 
+   equals(num: Fraction.FractionInput): boolean;
+   lt(num: Fraction.FractionInput): boolean;
+diff --git a/src/fraction.js b/src/fraction.js
+index 4292c48..a8563ca 100644
+--- a/src/fraction.js
++++ b/src/fraction.js
+@@ -1,8 +1,8 @@
+ /**
+- * @license Fraction.js v5.3.4 8/22/2025
++ * @license Fraction.js v5.3.4 7/15/2026
+  * https://raw.org/article/rational-numbers-in-javascript/
+  *
+- * Copyright (c) 2025, Robert Eisele (https://raw.org/)
++ * Copyright (c) 2026, Robert Eisele (https://raw.org/)
+  * Licensed under the MIT license.
+  **/
+ 
+@@ -1018,6 +1018,93 @@ Fraction.prototype = {
+     return res;
+   },
+ 
++  "convergents": function () {
++
++    // Returns the continued-fraction convergents p_0/q_0, p_1/q_1, ... of this
++    // fraction as an array of Fractions. Convergent i is the best rational
++    // approximation of this value among all fractions with denominator <= q_i.
++    // The final convergent equals this fraction exactly.
++
++    const sign = this['s'];
++    const cont = this['abs']()['toContinued']();
++
++    let h2 = C_ZERO, h1 = C_ONE; // numerators   h_{i-2}, h_{i-1}
++    let k2 = C_ONE, k1 = C_ZERO; // denominators k_{i-2}, k_{i-1}
++
++    const result = [];
++    for (let i = 0; i < cont.length; i++) {
++      const a = cont[i];
++      const hi = a * h1 + h2;
++      const ki = a * k1 + k2;
++      result.push(newFraction(sign * hi, ki));
++      h2 = h1; h1 = hi;
++      k2 = k1; k1 = ki;
++    }
++    return result;
++  },
++
++  "approximate": function (limit) {
++
++    // Best rational approximation of this fraction whose denominator does not
++    // exceed `limit`. Uses the continued-fraction convergents together with the
++    // largest admissible semiconvergent, then returns whichever candidate is
++    // closest to the true value (ties broken toward the smaller denominator).
++
++    let N = typeof limit === 'bigint' ? limit : BigInt(Math.floor(limit));
++    if (N < C_ONE) {
++      throw InvalidParameter();
++    }
++
++    // Already within the denominator budget: the value itself is the best.
++    if (this['d'] <= N) {
++      return this['clone']();
++    }
++
++    const n = this['n'];
++    const d = this['d'];
++    const cont = this['abs']()['toContinued']();
++
++    const babs = function (x) { return x < C_ZERO ? -x : x; };
++
++    let h2 = C_ZERO, h1 = C_ONE;
++    let k2 = C_ONE, k1 = C_ZERO;
++
++    for (let i = 0; i < cont.length; i++) {
++      const a = cont[i];
++      const ki = a * k1 + k2;
++
++      if (ki > N) {
++        // Highest semiconvergent (h2 + t*h1)/(k2 + t*k1) still within budget.
++        const t = (N - k2) / k1;
++        const pSemi = h2 + t * h1;
++        const qSemi = k2 + t * k1;
++
++        // Compare against the last full convergent h1/k1 by exact distance to
++        // |this| = n/d, cross-multiplied to avoid rounding.
++        const distConv = babs(h1 * d - n * k1) * qSemi;
++        const distSemi = babs(pSemi * d - n * qSemi) * k1;
++
++        let p, q;
++        if (distSemi < distConv || (distSemi === distConv && qSemi < k1)) {
++          p = pSemi;
++          q = qSemi;
++        } else {
++          p = h1;
++          q = k1;
++        }
++        return newFraction(this['s'] * p, q);
++      }
++
++      const hi = a * h1 + h2;
++      h2 = h1; h1 = hi;
++      k2 = k1; k1 = ki;
++    }
++
++    // Continued fraction terminated within budget (unreachable given the early
++    // return above, but keeps the function total).
++    return this['clone']();
++  },
++
+   "simplify": function (eps = 1e-3) {
+ 
+     // Continued fractions give best approximations for a max denominator,
