@@ -1,22 +1,23 @@
-import { getMarkets } from "../../lib/api";
-import MarketTable from "../components/MarketTable";
+import { getMemePairs } from "../../lib/dex";
+import MemeTable from "../components/MemeTable";
 
-export const revalidate = 30;
+export const revalidate = 15;
 
 export default async function MemePage() {
-  const coins = await getMarkets({ category: "meme-token", perPage: 40 });
+  const initial = await getMemePairs();
 
   return (
     <main className="container">
       <div className="meme-banner">
         <h1>🐕 Meme Coin Zone 🚀</h1>
         <p>
-          DOGE, SHIB, PEPE, WIF and the whole degen playground — trade the
-          hottest meme coins with live prices. High risk, high meme.
+          Live on-chain data from DexScreener — DOGE, SHIB, PEPE, WIF, BONK and
+          the whole degen playground. Real DEX prices, volume, liquidity and
+          transactions, updating live. High risk, high meme.
         </p>
       </div>
 
-      <MarketTable coins={coins} />
+      <MemeTable initial={initial} />
     </main>
   );
 }

@@ -895,24 +895,235 @@ tbody tr:last-child td {
   cursor: pointer;
 }
 
-/* Responsive ----------------------------------------------- */
+/* Animations ----------------------------------------------- */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes flashUp {
+  0% { background: var(--green-bg); }
+  100% { background: transparent; }
+}
+@keyframes flashDown {
+  0% { background: var(--red-bg); }
+  100% { background: transparent; }
+}
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+@keyframes floatY {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.fade-in {
+  animation: fadeIn 0.4s ease both;
+}
+.container > * {
+  animation: fadeInUp 0.45s ease both;
+}
+.meme-row {
+  animation: fadeInUp 0.4s ease both;
+}
+.meme-row.flash-up {
+  animation: flashUp 0.7s ease;
+}
+.meme-row.flash-down {
+  animation: flashDown 0.7s ease;
+}
+
+/* Interactive polish */
+.ticker-card,
+.stat,
+.panel {
+  transition: transform 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease;
+}
+.ticker-card:hover {
+  transform: translateY(-3px);
+  border-color: var(--gold);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+.stat:hover {
+  transform: translateY(-2px);
+  border-color: var(--gold);
+}
+.btn {
+  transition: transform 0.12s ease, background 0.15s ease, opacity 0.15s ease;
+}
+.btn:active {
+  transform: scale(0.96);
+}
+.trade-link {
+  transition: color 0.15s ease;
+}
+.trade-link:hover {
+  text-decoration: underline;
+}
+
+/* Animated meme banner */
+.meme-banner {
+  background: linear-gradient(120deg, #2a1a00, #1a1f28, #241800, #12161c);
+  background-size: 300% 300%;
+  animation: gradientShift 10s ease infinite;
+}
+.meme-banner h1 {
+  display: inline-block;
+  animation: floatY 3.5s ease-in-out infinite;
+}
+
+/* Meme live bar + table scroll */
+.meme-live-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border);
+  gap: 12px;
+}
+.meme-updated {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+.table-scroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Reduced-motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *, .container > *, .meme-row, .meme-banner, .meme-banner h1 {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Responsive — consistent across all screen sizes ---------- */
+
+/* Large desktops: let content breathe but stay centered */
+@media (min-width: 1600px) {
+  .container {
+    max-width: 1500px;
+  }
+}
+
+/* Tablet / small laptop */
+@media (max-width: 1100px) {
+  .trade-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .trade-grid .chart-panel {
+    grid-column: 1 / -1;
+  }
+}
 @media (max-width: 1000px) {
+  .header {
+    gap: 16px;
+    padding: 0 16px;
+  }
+  .nav {
+    gap: 16px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .nav::-webkit-scrollbar {
+    display: none;
+  }
   .trade-grid {
     grid-template-columns: 1fr;
   }
   .stat-row {
     grid-template-columns: repeat(2, 1fr);
   }
-  .nav {
+  .balance-pill {
     display: none;
   }
 }
+
+/* Tables scroll horizontally instead of breaking layout */
+@media (max-width: 900px) {
+  .table-wrap {
+    overflow-x: auto;
+  }
+  table {
+    min-width: 720px;
+  }
+  .trade-head {
+    flex-wrap: wrap;
+  }
+  .trade-head .px-lg {
+    font-size: 22px;
+  }
+}
+
+/* Phones */
 @media (max-width: 720px) {
-  thead th:nth-child(3),
-  tbody td:nth-child(3),
-  thead th:nth-child(6),
-  tbody td:nth-child(6),
-  .spark {
+  .container {
+    padding: 16px 12px;
+  }
+  .page-title {
+    font-size: 22px;
+  }
+  .header {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 10px 12px;
+    gap: 10px;
+  }
+  .header .nav {
+    order: 3;
+    flex-basis: 100%;
+  }
+  .header-right {
+    gap: 8px;
+  }
+  .header-right .btn {
+    padding: 7px 12px;
+    font-size: 13px;
+  }
+  .stat-row {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat .v {
+    font-size: 19px;
+  }
+  .meme-banner h1 {
+    font-size: 22px;
+  }
+  .candle-svg {
+    height: 320px;
+  }
+  .deposit-box {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .bot-panel {
+    right: 12px;
+    left: 12px;
+    width: auto;
+  }
+}
+
+/* Very small phones */
+@media (max-width: 420px) {
+  .brand {
+    font-size: 18px;
+  }
+  .user-chip .user-av + * {
     display: none;
+  }
+  .stat-row {
+    grid-template-columns: 1fr;
   }
 }
