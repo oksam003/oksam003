@@ -48,7 +48,7 @@ export const tweets = [
       desc: "A Bybit-style crypto & meme-coin exchange: real-time WebSocket price streaming, a TradingView-style candlestick chart, live order book, user login, deposit/withdraw wallet, an AI trading assistant, and per-account balances & order history. Built with Next.js 16.",
       tech: ["Next.js", "WebSockets", "AI Assistant", "Auth", "SVG Charts"],
       image:
-        "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&q=80&auto=format&fit=crop",
+        "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80&auto=format&fit=crop",
       link: "https://github.com/oksam003/oksam003/tree/main/crypto-app",
     },
     content:
