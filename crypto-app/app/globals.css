@@ -1,16 +1,23 @@
 :root {
-  --bg: #0b0e11;
-  --bg-2: #12161c;
-  --bg-3: #1a1f28;
-  --border: #232a35;
-  --text: #eaecef;
-  --text-muted: #7a8291;
-  --gold: #f7a600;
-  --gold-hover: #ffb724;
-  --green: #2ebd85;
-  --red: #f6465d;
-  --green-bg: rgba(46, 189, 133, 0.12);
-  --red-bg: rgba(246, 70, 93, 0.12);
+  /* Purple-forward identity — deliberately distinct from Bybit's black/gold */
+  --bg: #0c0a14;
+  --bg-2: #150f22;
+  --bg-3: #201636;
+  --border: #2f2447;
+  --text: #efecf9;
+  --text-muted: #918aa9;
+  /* accent kept under the --gold name so existing rules recolor automatically */
+  --gold: #a855f7;
+  --gold-hover: #c07bff;
+  --purple: #a855f7;
+  --purple-2: #ec4899;
+  --purple-3: #6366f1;
+  --grad: linear-gradient(135deg, #6366f1, #a855f7, #ec4899);
+  --glow: rgba(168, 85, 247, 0.45);
+  --green: #22e0a1;
+  --red: #ff4d6d;
+  --green-bg: rgba(34, 224, 161, 0.13);
+  --red-bg: rgba(255, 77, 109, 0.13);
 }
 
 * {
@@ -57,14 +64,21 @@ a {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--gold);
+  font-size: 23px;
+  font-weight: 900;
   letter-spacing: 0.5px;
+  background: var(--grad);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: gradientShift 6s ease infinite;
 }
 .brand .logo-mark {
-  color: var(--gold);
+  -webkit-text-fill-color: var(--purple);
   font-size: 20px;
+  animation: spinGlow 6s linear infinite;
+  display: inline-block;
 }
 .nav {
   display: flex;
@@ -924,6 +938,89 @@ tbody tr:last-child td {
 @keyframes floatY {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(-4px); }
+}
+@keyframes spinGlow {
+  0% { transform: rotate(0deg); filter: drop-shadow(0 0 2px var(--glow)); }
+  50% { filter: drop-shadow(0 0 8px var(--glow)); }
+  100% { transform: rotate(360deg); filter: drop-shadow(0 0 2px var(--glow)); }
+}
+@keyframes glowPulse {
+  0%, 100% { box-shadow: 0 0 0 0 var(--glow); }
+  50% { box-shadow: 0 0 22px 2px var(--glow); }
+}
+@keyframes auraDrift {
+  0% { transform: translate(-5%, -5%) scale(1); }
+  50% { transform: translate(5%, 5%) scale(1.15); }
+  100% { transform: translate(-5%, -5%) scale(1); }
+}
+@keyframes sheen {
+  0% { transform: translateX(-120%); }
+  60%, 100% { transform: translateX(220%); }
+}
+
+/* Ambient animated purple aura behind the whole app */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 40% at 15% 10%, rgba(99, 102, 241, 0.14), transparent 70%),
+    radial-gradient(45% 45% at 85% 20%, rgba(168, 85, 247, 0.14), transparent 70%),
+    radial-gradient(40% 40% at 50% 90%, rgba(236, 72, 153, 0.10), transparent 70%);
+  animation: auraDrift 18s ease-in-out infinite;
+}
+
+/* Header gets an animated gradient underline + glow */
+.header {
+  border-bottom: 1px solid transparent;
+  background:
+    linear-gradient(var(--bg), var(--bg)) padding-box,
+    var(--grad) border-box;
+  background-size: 100% 100%, 200% 200%;
+  animation: gradientShift 8s ease infinite;
+}
+
+/* Accent buttons glow on hover; add a moving sheen */
+.btn-gold,
+.auth-submit,
+.submit-btn.buy,
+.submit-btn.sell {
+  position: relative;
+  overflow: hidden;
+}
+.btn-gold:hover,
+.auth-submit:hover {
+  box-shadow: 0 0 18px var(--glow);
+}
+.btn-gold::after,
+.auth-submit::after,
+.submit-btn::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 40%;
+  height: 100%;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: translateX(-120%);
+}
+.btn-gold:hover::after,
+.auth-submit:hover::after,
+.submit-btn:hover::after {
+  animation: sheen 0.9s ease;
+}
+
+/* Panels lift with a purple edge on hover */
+.panel:hover {
+  border-color: var(--purple);
+  box-shadow: 0 10px 30px rgba(168, 85, 247, 0.12);
+}
+
+/* Bot button pulses a purple glow ring */
+.bot-fab {
+  animation: glowPulse 2.6s ease-in-out infinite;
 }
 
 .fade-in {
