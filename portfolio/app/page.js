@@ -1,8 +1,10 @@
 import { profile } from "./data";
 import Reveal from "./components/Reveal";
 import SchemaCard from "./components/SchemaCard";
+import ERDDiagram from "./components/ERDDiagram";
 import ApiRoutes from "./components/ApiRoutes";
 import ContainerMap from "./components/ContainerMap";
+import StatusPanel from "./components/StatusPanel";
 
 export default function Home() {
   return (
@@ -11,6 +13,7 @@ export default function Home() {
         <span className="logo">◧ {profile.handle}</span>
         <span className="dim">{profile.role}</span>
         <nav>
+          <a href="#status">status</a>
           <a href="#schema">schema</a>
           <a href="#api">api</a>
           <a href="#infra">infra</a>
@@ -65,6 +68,16 @@ export default function Home() {
           </div>
         </header>
 
+        {/* ── Live system status ── */}
+        <Reveal id="status">
+          <div className="section-head">
+            <span className="section-no">00</span>
+            <span className="section-title">SYSTEM STATUS</span>
+            <span className="section-meta">live</span>
+          </div>
+          <StatusPanel />
+        </Reveal>
+
         {/* ── SQL schema ── */}
         <Reveal id="schema">
           <div className="section-head">
@@ -73,6 +86,8 @@ export default function Home() {
             <span className="section-meta">who / developer table</span>
           </div>
           <SchemaCard />
+          <div style={{ height: 16 }} />
+          <ERDDiagram />
         </Reveal>
 
         {/* ── API routes / projects ── */}
