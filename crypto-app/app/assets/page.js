@@ -8,11 +8,12 @@ import { getMarkets } from "../../lib/api";
 import { fmtPrice, fmtNum } from "../../lib/format";
 
 export default function AssetsPage() {
-  const { wallet, ready, reset, deposit } = useWallet();
+  const { wallet, ready, reset, deposit, withdraw } = useWallet();
   const { user } = useAuth();
   const [prices, setPrices] = useState({});
-  const [depOpen, setDepOpen] = useState(false);
+  const [fundMode, setFundMode] = useState(null); // "deposit" | "withdraw" | null
   const [depAmt, setDepAmt] = useState("");
+  const [fundErr, setFundErr] = useState("");
 
   useEffect(() => {
     getMarkets({ perPage: 100 }).then((coins) => {
@@ -50,11 +51,20 @@ export default function AssetsPage() {
     );
   }
 
-  function doDeposit() {
-    const res = deposit(depAmt);
+  function openFund(mode) {
+    setFundErr("");
+    setDepAmt("");
+    setFundMode((m) => (m === mode ? null : mode));
+  }
+
+  function submitFund() {
+    setFundErr("");
+    const res = fundMode === "withdraw" ? withdraw(depAmt) : deposit(depAmt);
     if (res.ok) {
       setDepAmt("");
-      setDepOpen(false);
+      setFundMode(null);
+    } else {
+      setFundErr(res.error);
     }
   }
 
@@ -63,8 +73,11 @@ export default function AssetsPage() {
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h1 className="page-title">Assets</h1>
         <div style={{ display: "flex", gap: 10 }}>
-          <button className="btn btn-gold" onClick={() => setDepOpen((o) => !o)}>
+          <button className="btn btn-gold" onClick={() => openFund("deposit")}>
             Deposit
+          </button>
+          <button className="btn btn-ghost" onClick={() => openFund("withdraw")}>
+            Withdraw
           </button>
           <button className="btn btn-ghost" onClick={reset}>
             Reset
@@ -75,26 +88,40 @@ export default function AssetsPage() {
         Welcome, {user.name}. Here's your portfolio overview.
       </p>
 
-      {depOpen && (
+      {fundMode && (
         <div className="deposit-box">
           <div className="field" style={{ margin: 0, flex: 1 }}>
-            <label>Deposit amount (USDT)</label>
+            <label>
+              {fundMode === "withdraw" ? "Withdraw" : "Deposit"} amount (USDT)
+            </label>
             <input
               type="number"
               placeholder="0.00"
               value={depAmt}
               onChange={(e) => setDepAmt(e.target.value)}
             />
+            {fundErr && (
+              <div style={{ color: "var(--red)", fontSize: 12, marginTop: 6 }}>
+                {fundErr}
+              </div>
+            )}
           </div>
           <div className="deposit-quick">
-            {[100, 1000, 10000].map((a) => (
-              <button key={a} onClick={() => setDepAmt(String(a))}>
-                +{a.toLocaleString()}
-              </button>
-            ))}
+            {fundMode === "withdraw" ? (
+              <>
+                <button onClick={() => setDepAmt(String(wallet.usdt / 2))}>50%</button>
+                <button onClick={() => setDepAmt(String(wallet.usdt))}>Max</button>
+              </>
+            ) : (
+              [100, 1000, 10000].map((a) => (
+                <button key={a} onClick={() => setDepAmt(String(a))}>
+                  +{a.toLocaleString()}
+                </button>
+              ))
+            )}
           </div>
-          <button className="btn btn-gold" onClick={doDeposit}>
-            Confirm Deposit
+          <button className="btn btn-gold" onClick={submitFund}>
+            Confirm {fundMode === "withdraw" ? "Withdrawal" : "Deposit"}
           </button>
         </div>
       )}

@@ -49,6 +49,18 @@ export function WalletProvider({ children }) {
     return { ok: true };
   }
 
+  function withdraw(amount) {
+    const amt = Number(amount);
+    if (!amt || amt <= 0) return { ok: false, error: "Enter a valid amount" };
+    if (amt > wallet.usdt) return { ok: false, error: "Insufficient available balance" };
+    setWallet((w) => ({
+      ...w,
+      usdt: w.usdt - amt,
+      deposited: Math.max(0, (w.deposited || 0) - amt),
+    }));
+    return { ok: true };
+  }
+
   function placeOrder({ side, coin, symbol, price, amount }) {
     const cost = price * amount;
     if (side === "buy") {
@@ -78,7 +90,7 @@ export function WalletProvider({ children }) {
   }
 
   return (
-    <WalletContext.Provider value={{ wallet, ready, deposit, placeOrder, reset }}>
+    <WalletContext.Provider value={{ wallet, ready, deposit, withdraw, placeOrder, reset }}>
       {children}
     </WalletContext.Provider>
   );

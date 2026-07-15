@@ -1,7 +1,9 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useWallet } from "../../WalletContext";
+import { useAuth } from "../../AuthContext";
 import { fmtPrice, fmtPct, fmtNum } from "../../../lib/format";
 import CandleChart from "../../components/CandleChart";
 import { useLivePrice } from "../../components/useLivePrice";
@@ -150,12 +152,32 @@ function OrderBook({ price }) {
 }
 
 function OrderForm({ coin, price, symUpper, wallet, ready, placeOrder }) {
+  const { user } = useAuth();
   const [side, setSide] = useState("buy");
   const [amount, setAmount] = useState("");
   const [toast, setToast] = useState(null);
 
   const held = wallet.holdings[coin.id] || 0;
   const total = useMemo(() => (Number(amount) || 0) * price, [amount, price]);
+
+  if (!user) {
+    return (
+      <div className="panel">
+        <div className="empty" style={{ padding: "40px 12px" }}>
+          <div style={{ fontSize: 34, marginBottom: 10 }}>🔒</div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: "var(--text)", marginBottom: 6 }}>
+            Log in to trade
+          </div>
+          <div style={{ marginBottom: 20 }}>
+            Sign in to buy or sell {symUpper}.
+          </div>
+          <Link href="/login" className="btn btn-gold">
+            Log In / Sign Up
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   function setPct(pct) {
     if (side === "buy") {
