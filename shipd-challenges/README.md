@@ -6,7 +6,7 @@ Solutions and work for **Shipd** coding challenges — organized by track.
 
 | # | Challenge | Language | Status | Notes |
 |---|-----------|----------|--------|-------|
-| — | _add your first challenge_ | — | ⬜ todo | |
+| 01 | [expr-eval symbolic differentiation](olympus-01-expr-eval-symbolic-differentiation/) | JavaScript | ✅ verified | Add `Expression.differentiate()` to silentmatt/expr-eval @ `6e889e0`; verified 20 fail → 499 pass |
 
 ## 🔴 Mars
 

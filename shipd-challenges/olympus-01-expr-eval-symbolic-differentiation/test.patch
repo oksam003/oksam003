@@ -1,0 +1,164 @@
+diff --git a/test/differentiate.js b/test/differentiate.js
+new file mode 100644
+index 0000000..4319555
+--- /dev/null
++++ b/test/differentiate.js
+@@ -0,0 +1,158 @@
++/* global describe, it */
++
++'use strict';
++
++var assert = require('assert');
++var Parser = require('../dist/bundle').Parser;
++
++var parser = new Parser();
++
++function d(expr, variable) {
++  return parser.parse(expr).differentiate(variable || 'x');
++}
++
++function evalAt(expr, variable, values) {
++  return parser.parse(expr).differentiate(variable || 'x').evaluate(values || {});
++}
++
++function close(actual, expected, eps) {
++  assert.ok(
++    Math.abs(actual - expected) <= (eps || 1e-9),
++    'expected ' + actual + ' to be close to ' + expected
++  );
++}
++
++// numeric finite-difference derivative for cross-checking
++function fd(expr, variable, x) {
++  var h = 1e-6;
++  var f = parser.parse(expr);
++  var hi = {}; hi[variable] = x + h;
++  var lo = {}; lo[variable] = x - h;
++  return (f.evaluate(hi) - f.evaluate(lo)) / (2 * h);
++}
++
++describe('Expression#differentiate', function () {
++  it('returns an Expression', function () {
++    assert.ok(d('x^2') instanceof require('../dist/bundle').Expression);
++    assert.equal(typeof d('x^2').evaluate, 'function');
++    assert.equal(typeof d('x^2').toString, 'function');
++  });
++
++  it('differentiates constants to 0', function () {
++    close(evalAt('5', 'x', { x: 3 }), 0);
++    close(evalAt('42', 'x', {}), 0);
++  });
++
++  it('differentiates the variable to 1', function () {
++    close(evalAt('x', 'x', { x: 9 }), 1);
++  });
++
++  it('treats other variables as constants', function () {
++    close(evalAt('y', 'x', { y: 7 }), 0);
++    close(evalAt('x * y', 'x', { x: 3, y: 4 }), 4);
++  });
++
++  it('applies the power rule for constant exponents', function () {
++    close(evalAt('x^2', 'x', { x: 3 }), 6);
++    close(evalAt('x^3', 'x', { x: 2 }), 12);
++    close(evalAt('x^0.5', 'x', { x: 4 }), 0.25);
++  });
++
++  it('is linear over + and -', function () {
++    close(evalAt('2 * x + 1', 'x', { x: 10 }), 2);
++    close(evalAt('x^2 + 3 * x', 'x', { x: 1 }), 5);
++    close(evalAt('x^3 - x', 'x', { x: 2 }), 11);
++  });
++
++  it('applies the product rule', function () {
++    // d/dx (x^2 * sin(x)) = 2x sin x + x^2 cos x
++    var x = 1.3;
++    close(evalAt('x^2 * sin(x)', 'x', { x: x }), 2 * x * Math.sin(x) + x * x * Math.cos(x));
++    close(evalAt('x^2 * sin(x)', 'x', { x: x }), fd('x^2 * sin(x)', 'x', x), 1e-5);
++  });
++
++  it('applies the quotient rule', function () {
++    var x = 1.7;
++    close(evalAt('sin(x) / x', 'x', { x: x }), (Math.cos(x) * x - Math.sin(x)) / (x * x));
++    close(evalAt('sin(x) / x', 'x', { x: x }), fd('sin(x) / x', 'x', x), 1e-5);
++  });
++
++  it('differentiates trig functions', function () {
++    close(evalAt('sin(x)', 'x', { x: 0 }), 1);
++    close(evalAt('cos(x)', 'x', { x: Math.PI / 2 }), -1);
++    close(evalAt('tan(x)', 'x', { x: 0 }), 1);
++  });
++
++  it('differentiates exp, ln and sqrt', function () {
++    close(evalAt('exp(x)', 'x', { x: 1 }), Math.E);
++    close(evalAt('ln(x)', 'x', { x: 2 }), 0.5);
++    close(evalAt('sqrt(x)', 'x', { x: 9 }), 1 / (2 * 3));
++  });
++
++  it('differentiates log2 and log10', function () {
++    close(evalAt('log2(x)', 'x', { x: 2 }), 1 / (2 * Math.LN2));
++    close(evalAt('log10(x)', 'x', { x: 10 }), 1 / (10 * Math.LN10));
++  });
++
++  it('differentiates inverse trig', function () {
++    close(evalAt('atan(x)', 'x', { x: 1 }), 0.5);
++    var x = 0.4;
++    close(evalAt('asin(x)', 'x', { x: x }), 1 / Math.sqrt(1 - x * x));
++    close(evalAt('acos(x)', 'x', { x: x }), -1 / Math.sqrt(1 - x * x));
++  });
++
++  it('applies the chain rule', function () {
++    var x = 0.9;
++    close(evalAt('sin(x^2)', 'x', { x: x }), Math.cos(x * x) * 2 * x);
++    close(evalAt('exp(2 * x)', 'x', { x: x }), 2 * Math.exp(2 * x));
++    close(evalAt('ln(x^2 + 1)', 'x', { x: x }), (2 * x) / (x * x + 1));
++  });
++
++  it('handles the general power rule (variable exponent)', function () {
++    // d/dx x^x = x^x (ln x + 1)
++    var x = 2;
++    close(evalAt('x^x', 'x', { x: x }), Math.pow(x, x) * (Math.log(x) + 1), 1e-6);
++  });
++
++  it('differentiates unary minus', function () {
++    close(evalAt('-x^2', 'x', { x: 3 }), -6);
++    close(evalAt('-sin(x)', 'x', { x: 0 }), -1);
++  });
++
++  it('supports higher-order derivatives', function () {
++    // d2/dx2 x^3 = 6x
++    var second = parser.parse('x^3').differentiate('x').differentiate('x');
++    close(second.evaluate({ x: 2 }), 12);
++  });
++
++  it('produces a result usable by toString, simplify and toJSFunction', function () {
++    var g = d('x^2 + 3 * x');
++    assert.equal(typeof g.toString(), 'string');
++    close(g.simplify().evaluate({ x: 4 }), 11);
++    var fn = g.toJSFunction('x');
++    close(fn(4), 11);
++  });
++
++  it('cross-checks a battery of expressions against finite differences', function () {
++    var cases = [
++      ['x^4 - 2 * x^2 + x', 1.1],
++      ['sin(x) * cos(x)', 0.6],
++      ['x / (x^2 + 1)', 0.8],
++      ['sqrt(x^2 + 1)', 1.5],
++      ['tanh(x)', 0.3]
++    ];
++    cases.forEach(function (c) {
++      close(evalAt(c[0], 'x', { x: c[1] }), fd(c[0], 'x', c[1]), 1e-5);
++    });
++  });
++
++  it('throws a clear error for non-differentiable constructs', function () {
++    assert.throws(function () { d('x > 0 ? x : -x'); }, /operator|conditional/);
++    assert.throws(function () { d('[x, 1]'); }, /array/);
++    assert.throws(function () { d('atan2(x, x)'); }, /function/);
++  });
++
++  it('throws when no variable is provided', function () {
++    assert.throws(function () { parser.parse('x^2').differentiate(); }, /variable name is required/);
++  });
++});

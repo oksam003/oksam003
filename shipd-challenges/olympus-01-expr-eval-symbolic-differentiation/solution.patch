@@ -1,0 +1,324 @@
+diff --git a/src/differentiate.js b/src/differentiate.js
+new file mode 100644
+index 0000000..7bafa21
+--- /dev/null
++++ b/src/differentiate.js
+@@ -0,0 +1,186 @@
++import { Instruction, INUMBER, IOP1, IOP2, IOP3, IVAR, IVARNAME, IFUNCALL, IFUNDEF, IEXPR, IEXPREVAL, IMEMBER, IENDSTATEMENT, IARRAY } from './instruction';
++
++// Token builders -------------------------------------------------------------
++function num(value) {
++  return new Instruction(INUMBER, value);
++}
++
++function variable(name) {
++  return new Instruction(IVAR, name);
++}
++
++function op1(value) {
++  return new Instruction(IOP1, value);
++}
++
++function op2(value) {
++  return new Instruction(IOP2, value);
++}
++
++// Combinators over RPN token arrays ------------------------------------------
++function add(a, b) {
++  return a.concat(b, [op2('+')]);
++}
++
++function sub(a, b) {
++  return a.concat(b, [op2('-')]);
++}
++
++function mul(a, b) {
++  return a.concat(b, [op2('*')]);
++}
++
++function div(a, b) {
++  return a.concat(b, [op2('/')]);
++}
++
++function pow(a, b) {
++  return a.concat(b, [op2('^')]);
++}
++
++function neg(a) {
++  return a.concat([op1('-')]);
++}
++
++function call(name, a) {
++  return a.concat([op1(name)]);
++}
++
++function isNumberTokens(tokens) {
++  return tokens.length === 1 && tokens[0].type === INUMBER && typeof tokens[0].value === 'number';
++}
++
++// Derivative of a unary operator applied to `u` (value tokens) with inner
++// derivative `du`. Returns derivative token array, or throws if unsupported.
++function differentiateUnary(name, u, du) {
++  switch (name) {
++    case '-':
++      return neg(du);
++    case '+':
++      return du;
++    case 'sin':
++      return mul(call('cos', u), du);
++    case 'cos':
++      return mul(neg(call('sin', u)), du);
++    case 'tan':
++      return div(du, pow(call('cos', u), [num(2)]));
++    case 'exp':
++      return mul(call('exp', u), du);
++    case 'ln':
++    case 'log':
++      return div(du, u);
++    case 'log2':
++    case 'lg':
++      return div(du, mul(u, [num(Math.LN2)]));
++    case 'log10':
++      return div(du, mul(u, [num(Math.LN10)]));
++    case 'sqrt':
++      return div(du, mul([num(2)], call('sqrt', u)));
++    case 'cbrt':
++      return div(du, mul([num(3)], pow(call('cbrt', u), [num(2)])));
++    case 'sinh':
++      return mul(call('cosh', u), du);
++    case 'cosh':
++      return mul(call('sinh', u), du);
++    case 'tanh':
++      return div(du, pow(call('cosh', u), [num(2)]));
++    case 'asin':
++      return div(du, call('sqrt', sub([num(1)], pow(u, [num(2)]))));
++    case 'acos':
++      return neg(div(du, call('sqrt', sub([num(1)], pow(u, [num(2)])))));
++    case 'atan':
++      return div(du, add([num(1)], pow(u, [num(2)])));
++    case 'abs':
++      return mul(call('sign', u), du);
++    default:
++      throw new Error('differentiate: unsupported unary operator "' + name + '"');
++  }
++}
++
++// Derivative of a binary operator over operands a and b (each { value, deriv }).
++function differentiateBinary(name, a, b) {
++  switch (name) {
++    case '+':
++      return add(a.deriv, b.deriv);
++    case '-':
++      return sub(a.deriv, b.deriv);
++    case '*':
++      return add(mul(a.deriv, b.value), mul(a.value, b.deriv));
++    case '/':
++      return div(sub(mul(a.deriv, b.value), mul(a.value, b.deriv)), pow(b.value, [num(2)]));
++    case '^': {
++      // Constant exponent -> power rule: d/dx u^n = n*u^(n-1)*u'
++      if (isNumberTokens(b.value)) {
++        var n = b.value[0].value;
++        return mul(mul([num(n)], pow(a.value, [num(n - 1)])), a.deriv);
++      }
++      // General case: d/dx u^v = u^v * (v'*ln(u) + v*u'/u)
++      var uv = pow(a.value, b.value);
++      return mul(uv, add(mul(b.deriv, call('ln', a.value)), mul(b.value, div(a.deriv, a.value))));
++    }
++    default:
++      throw new Error('differentiate: unsupported binary operator "' + name + '"');
++  }
++}
++
++// Differentiate an RPN token array with respect to `withRespectTo`.
++// Returns a new RPN token array representing the derivative.
++export default function differentiate(tokens, withRespectTo) {
++  if (typeof withRespectTo !== 'string' || withRespectTo.length === 0) {
++    throw new Error('differentiate: a variable name is required');
++  }
++
++  var stack = [];
++  for (var i = 0; i < tokens.length; i++) {
++    var item = tokens[i];
++    var type = item.type;
++    if (type === INUMBER) {
++      if (Array.isArray(item.value)) {
++        throw new Error('differentiate: cannot differentiate array literals');
++      }
++      stack.push({ value: [item], deriv: [num(0)] });
++    } else if (type === IVAR || type === IVARNAME) {
++      stack.push({ value: [variable(item.value)], deriv: [num(item.value === withRespectTo ? 1 : 0)] });
++    } else if (type === IOP2) {
++      if (stack.length < 2) {
++        throw new Error('differentiate: malformed expression');
++      }
++      var b = stack.pop();
++      var a = stack.pop();
++      stack.push({
++        value: a.value.concat(b.value, [item]),
++        deriv: differentiateBinary(item.value, a, b)
++      });
++    } else if (type === IOP1) {
++      if (stack.length < 1) {
++        throw new Error('differentiate: malformed expression');
++      }
++      var operand = stack.pop();
++      stack.push({
++        value: operand.value.concat([item]),
++        deriv: differentiateUnary(item.value, operand.value, operand.deriv)
++      });
++    } else if (type === IOP3) {
++      throw new Error('differentiate: cannot differentiate conditional expressions');
++    } else if (type === IFUNCALL) {
++      throw new Error('differentiate: cannot differentiate custom function calls');
++    } else if (type === IFUNDEF) {
++      throw new Error('differentiate: cannot differentiate function definitions');
++    } else if (type === IEXPR || type === IEXPREVAL) {
++      throw new Error('differentiate: cannot differentiate nested expressions');
++    } else if (type === IMEMBER) {
++      throw new Error('differentiate: cannot differentiate member access');
++    } else if (type === IARRAY) {
++      throw new Error('differentiate: cannot differentiate arrays');
++    } else if (type === IENDSTATEMENT) {
++      throw new Error('differentiate: cannot differentiate multiple statements');
++    } else {
++      throw new Error('differentiate: unsupported token "' + type + '"');
++    }
++  }
++
++  if (stack.length !== 1) {
++    throw new Error('differentiate: malformed expression');
++  }
++  return stack[0].deriv;
++}
+diff --git a/src/expression.js b/src/expression.js
+index f36d73e..327b945 100644
+--- a/src/expression.js
++++ b/src/expression.js
+@@ -1,61 +1,66 @@
+-import simplify from './simplify';
+-import substitute from './substitute';
+-import evaluate from './evaluate';
+-import expressionToString from './expression-to-string';
+-import getSymbols from './get-symbols';
+-
+-export function Expression(tokens, parser) {
+-  this.tokens = tokens;
+-  this.parser = parser;
+-  this.unaryOps = parser.unaryOps;
+-  this.binaryOps = parser.binaryOps;
+-  this.ternaryOps = parser.ternaryOps;
+-  this.functions = parser.functions;
+-}
+-
+-Expression.prototype.simplify = function (values) {
+-  values = values || {};
+-  return new Expression(simplify(this.tokens, this.unaryOps, this.binaryOps, this.ternaryOps, values), this.parser);
+-};
+-
+-Expression.prototype.substitute = function (variable, expr) {
+-  if (!(expr instanceof Expression)) {
+-    expr = this.parser.parse(String(expr));
+-  }
+-
+-  return new Expression(substitute(this.tokens, variable, expr), this.parser);
+-};
+-
+-Expression.prototype.evaluate = function (values) {
+-  values = values || {};
+-  return evaluate(this.tokens, this, values);
+-};
+-
+-Expression.prototype.toString = function () {
+-  return expressionToString(this.tokens, false);
+-};
+-
+-Expression.prototype.symbols = function (options) {
+-  options = options || {};
+-  var vars = [];
+-  getSymbols(this.tokens, vars, options);
+-  return vars;
+-};
+-
+-Expression.prototype.variables = function (options) {
+-  options = options || {};
+-  var vars = [];
+-  getSymbols(this.tokens, vars, options);
+-  var functions = this.functions;
+-  return vars.filter(function (name) {
+-    return !(name in functions);
+-  });
+-};
+-
+-Expression.prototype.toJSFunction = function (param, variables) {
+-  var expr = this;
+-  var f = new Function(param, 'with(this.functions) with (this.ternaryOps) with (this.binaryOps) with (this.unaryOps) { return ' + expressionToString(this.simplify(variables).tokens, true) + '; }'); // eslint-disable-line no-new-func
+-  return function () {
+-    return f.apply(expr, arguments);
+-  };
+-};
++import simplify from './simplify';
++import substitute from './substitute';
++import evaluate from './evaluate';
++import expressionToString from './expression-to-string';
++import getSymbols from './get-symbols';
++import differentiate from './differentiate';
++
++export function Expression(tokens, parser) {
++  this.tokens = tokens;
++  this.parser = parser;
++  this.unaryOps = parser.unaryOps;
++  this.binaryOps = parser.binaryOps;
++  this.ternaryOps = parser.ternaryOps;
++  this.functions = parser.functions;
++}
++
++Expression.prototype.simplify = function (values) {
++  values = values || {};
++  return new Expression(simplify(this.tokens, this.unaryOps, this.binaryOps, this.ternaryOps, values), this.parser);
++};
++
++Expression.prototype.substitute = function (variable, expr) {
++  if (!(expr instanceof Expression)) {
++    expr = this.parser.parse(String(expr));
++  }
++
++  return new Expression(substitute(this.tokens, variable, expr), this.parser);
++};
++
++Expression.prototype.differentiate = function (variable) {
++  return new Expression(differentiate(this.tokens, variable), this.parser);
++};
++
++Expression.prototype.evaluate = function (values) {
++  values = values || {};
++  return evaluate(this.tokens, this, values);
++};
++
++Expression.prototype.toString = function () {
++  return expressionToString(this.tokens, false);
++};
++
++Expression.prototype.symbols = function (options) {
++  options = options || {};
++  var vars = [];
++  getSymbols(this.tokens, vars, options);
++  return vars;
++};
++
++Expression.prototype.variables = function (options) {
++  options = options || {};
++  var vars = [];
++  getSymbols(this.tokens, vars, options);
++  var functions = this.functions;
++  return vars.filter(function (name) {
++    return !(name in functions);
++  });
++};
++
++Expression.prototype.toJSFunction = function (param, variables) {
++  var expr = this;
++  var f = new Function(param, 'with(this.functions) with (this.ternaryOps) with (this.binaryOps) with (this.unaryOps) { return ' + expressionToString(this.simplify(variables).tokens, true) + '; }'); // eslint-disable-line no-new-func
++  return function () {
++    return f.apply(expr, arguments);
++  };
++};
