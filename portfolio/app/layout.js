@@ -1,9 +1,9 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Samuel Okoosi — Portfolio",
+  title: "Samuel Okoosi — System Blueprint",
   description:
-    "Software Developer from Nigeria. A Twitter/X-styled portfolio built with Next.js.",
+    "Full-stack engineer portfolio designed as a system blueprint — SQL schema, API routes, and container architecture.",
 };
 
 export default function RootLayout({ children }) {

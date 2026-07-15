@@ -1,140 +1,126 @@
 export const profile = {
   name: "Samuel Olanrewaju Okoosi",
-  handle: "@oksam003",
-  bio: "Software Developer 👨‍💻 | Building for the web with React, Node.js & Python. Anime lover 🎌. Always learning, always shipping.",
-  location: "Nigeria 🇳🇬",
-  joined: "Joined 2023",
-  website: "github.com/oksam003",
+  handle: "oksam003",
+  role: "Full-Stack Software Engineer",
+  tagline: "I design and ship full-stack systems — from schema to deploy.",
+  location: "Lagos, Nigeria",
   email: "Samuelokoosi21@gmail.com",
-  following: 128,
-  followers: 342,
-  avatar: "SO",
+  github: "https://github.com/oksam003",
+  linkedin: "https://www.linkedin.com/in/samuel-okoosi-12b218259",
+  revision: "v2.0",
+  updated: "2026",
 };
 
-export const nav = [
-  { icon: "🏠", label: "Home" },
-  { icon: "🔍", label: "Explore" },
-  { icon: "🔔", label: "Notifications" },
-  { icon: "✉️", label: "Messages" },
-  { icon: "📌", label: "Projects" },
-  { icon: "👤", label: "Profile" },
-  { icon: "⚙️", label: "Settings" },
-];
+// ── Rendered as a SQL schema (CREATE TABLE) ──────────────────────────
+export const schema = {
+  table: "developer",
+  columns: [
+    { name: "id", type: "uuid", constraint: "PRIMARY KEY", value: "oksam003" },
+    { name: "role", type: "varchar", constraint: "NOT NULL", value: "Full-Stack Engineer" },
+    { name: "location", type: "varchar", constraint: "", value: "Lagos, NG" },
+    { name: "experience", type: "int", constraint: "CHECK (> 0)", value: "3+ yrs" },
+    { name: "focus", type: "text[]", constraint: "", value: "{web, apis, realtime}" },
+    { name: "status", type: "enum", constraint: "DEFAULT", value: "open_to_work" },
+  ],
+  relations: [
+    { table: "skills", on: "developer.id = skills.dev_id", type: "1:N" },
+    { table: "projects", on: "developer.id = projects.owner_id", type: "1:N" },
+  ],
+};
 
-// Portfolio content presented as a Twitter/X feed of "tweets"
-export const tweets = [
+// ── Rendered as API routes / endpoints (projects) ────────────────────
+export const endpoints = [
   {
-    id: 1,
-    pinned: true,
-    time: "Pinned",
-    content:
-      "👋 Hi, I'm Samuel — a passionate Software Developer from Nigeria. I build clean, responsive web apps and love turning ideas into products. Scroll down to see what I've been working on 🧵",
-    tags: ["#developer", "#webdev", "#opentowork"],
-    stats: { replies: 24, retweets: 58, likes: 210 },
+    method: "GET",
+    path: "/projects/nexa",
+    name: "Nexa — Crypto Exchange",
+    status: 200,
+    summary:
+      "Bybit-style crypto & meme-coin exchange with real-time WebSocket price streaming, a TradingView-style candlestick chart, live order book, auth, deposit/withdraw wallet, and an AI trading assistant.",
+    stack: ["Next.js 16", "WebSockets", "DexScreener", "Binance WS", "Auth"],
+    link: "https://github.com/oksam003/oksam003/tree/main/crypto-app",
+    tag: "flagship",
   },
   {
-    id: 2,
-    time: "2h",
-    content:
-      "🛠️ My stack: JavaScript, React, Node.js, Python, MongoDB, PostgreSQL, MySQL. Comfortable across the full stack and always exploring new tools.",
-    tags: ["#javascript", "#react", "#nodejs", "#python"],
-    stats: { replies: 12, retweets: 30, likes: 145 },
+    method: "POST",
+    path: "/projects/mae-dealership",
+    name: "Mae Car Dealership",
+    status: 201,
+    summary:
+      "Full-stack car dealership platform — browse inventory, filter by make/model/price, book test drives, and manage listings with payments.",
+    stack: ["React", "Node.js", "MongoDB", "Stripe"],
+    link: "https://github.com/oksam003",
+    tag: "full-stack",
   },
   {
-    id: 3,
-    time: "1h",
-    project: {
-      title: "Nexa — Crypto Exchange",
-      accent: "purple",
-      desc: "A Bybit-style crypto & meme-coin exchange: real-time WebSocket price streaming, a TradingView-style candlestick chart, live order book, user login, deposit/withdraw wallet, an AI trading assistant, and per-account balances & order history. Built with Next.js 16.",
-      tech: ["Next.js", "WebSockets", "AI Assistant", "Auth", "SVG Charts"],
-      image:
-        "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=800&q=80&auto=format&fit=crop",
-      link: "https://github.com/oksam003/oksam003/tree/main/crypto-app",
-    },
-    content:
-      "🚀 Just shipped Nexa — a full crypto exchange with spot + meme-coin trading, real-time price streaming, an interactive candlestick chart, an AI assistant, and login with per-account deposit/withdraw wallets. Trade DOGE, PEPE, BTC & more 📈",
-    tags: ["#crypto", "#nextjs", "#trading", "#memecoins", "#ai"],
-    stats: { replies: 64, retweets: 158, likes: 712 },
+    method: "GET",
+    path: "/projects/ecommerce",
+    name: "E-Commerce Platform",
+    status: 200,
+    summary:
+      "Shopping app with cart, authentication, and a checkout/payment flow.",
+    stack: ["React", "Node.js", "MongoDB"],
+    link: "https://github.com/oksam003",
+    tag: "full-stack",
   },
   {
-    id: 4,
-    time: "8h",
-    project: {
-      title: "Mae Car Dealership",
-      desc: "A modern car dealership platform — browse inventory, filter by make/model/price, book test drives, and manage listings. Built with React, Node.js & MongoDB.",
-      tech: ["React", "Node.js", "MongoDB", "Stripe"],
-      image:
-        "https://images.unsplash.com/photo-1567818735868-e71b99932e29?w=800&q=80&auto=format&fit=crop",
-      link: "https://github.com/oksam003",
-    },
-    content:
-      "🚗 Introducing Mae Car Dealership — my latest full-stack project. Browse cars, filter, and book test drives right from the app. Here's a look 👇",
-    tags: ["#cardealership", "#fullstack", "#react"],
-    stats: { replies: 42, retweets: 88, likes: 401 },
+    method: "PUT",
+    path: "/projects/task-manager",
+    name: "Task Manager App",
+    status: 200,
+    summary:
+      "Productivity app with drag-and-drop, filtering, and persistent storage.",
+    stack: ["React", "CSS", "LocalStorage"],
+    link: "https://github.com/oksam003",
+    tag: "frontend",
   },
   {
-    id: 5,
-    time: "1d",
-    project: {
-      title: "E-Commerce Platform",
-      desc: "Full-stack shopping app with cart, auth, and payment flow. Built with React + Node.js + MongoDB.",
-      tech: ["React", "Node.js", "MongoDB"],
-      image:
-        "https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?w=800&q=80&auto=format&fit=crop",
-      link: "https://github.com/oksam003",
-    },
-    content: "🚀 Shipped a full-stack e-commerce platform. Here's a peek 👇",
-    stats: { replies: 18, retweets: 44, likes: 189 },
-  },
-  {
-    id: 6,
-    time: "3d",
-    project: {
-      title: "Task Manager App",
-      desc: "A productivity app to organize tasks with drag-and-drop, filtering, and persistent storage.",
-      tech: ["React", "CSS", "LocalStorage"],
-      image:
-        "https://images.unsplash.com/photo-1484480974693-6ca0a78fb36b?w=800&q=80&auto=format&fit=crop",
-      link: "https://github.com/oksam003",
-    },
-    content: "✅ Built a sleek task manager to stay organized. Clean UI, smooth UX.",
-    stats: { replies: 9, retweets: 21, likes: 98 },
-  },
-  {
-    id: 7,
-    time: "5d",
-    project: {
-      title: "Portfolio API",
-      desc: "REST API serving portfolio data with Python. JWT auth and PostgreSQL storage.",
-      tech: ["Python", "PostgreSQL", "REST"],
-      image:
-        "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=800&q=80&auto=format&fit=crop",
-      link: "https://github.com/oksam003",
-    },
-    content: "🐍 A Python-powered REST API backing my projects.",
-    stats: { replies: 7, retweets: 15, likes: 76 },
-  },
-  {
-    id: 8,
-    time: "1w",
-    content:
-      "🎌 Fun fact: outside of coding, I'm a huge anime fan. It keeps the creativity flowing. What's everyone watching this season?",
-    tags: ["#anime", "#life"],
-    stats: { replies: 33, retweets: 12, likes: 254 },
+    method: "GET",
+    path: "/projects/portfolio-api",
+    name: "Portfolio API",
+    status: 200,
+    summary: "REST API serving portfolio data with JWT auth and Postgres.",
+    stack: ["Python", "PostgreSQL", "REST"],
+    link: "https://github.com/oksam003",
+    tag: "backend",
   },
 ];
 
-export const trends = [
-  { category: "Frontend", tag: "React", posts: "12.4K" },
-  { category: "Backend", tag: "Node.js", posts: "9.1K" },
-  { category: "Language", tag: "Python", posts: "20.2K" },
-  { category: "Database", tag: "MongoDB", posts: "5.6K" },
-  { category: "Design", tag: "Figma", posts: "3.3K" },
-];
-
-export const whoToFollow = [
-  { name: "React", handle: "@reactjs", avatar: "⚛️" },
-  { name: "Node.js", handle: "@nodejs", avatar: "🟢" },
-  { name: "Python", handle: "@ThePSF", avatar: "🐍" },
+// ── Rendered as a Docker / container architecture map ────────────────
+export const containers = [
+  {
+    service: "frontend",
+    image: "react:19-nextjs",
+    port: "3000:3000",
+    tech: ["React", "Next.js", "JavaScript", "HTML5", "CSS3", "Figma"],
+    depends: ["api"],
+  },
+  {
+    service: "api",
+    image: "node:20-express",
+    port: "8080:8080",
+    tech: ["Node.js", "Python", "REST", "WebSockets", "JWT"],
+    depends: ["database", "cache"],
+  },
+  {
+    service: "database",
+    image: "postgres:16 / mongo:7",
+    port: "5432:5432",
+    tech: ["PostgreSQL", "MongoDB", "MySQL", "Oracle"],
+    depends: [],
+  },
+  {
+    service: "cache",
+    image: "redis:7-alpine",
+    port: "6379:6379",
+    tech: ["Redis", "In-memory"],
+    depends: [],
+  },
+  {
+    service: "infra",
+    image: "aws / docker",
+    port: "—",
+    tech: ["AWS", "Docker", "CI/CD", "Netlify"],
+    depends: [],
+  },
 ];

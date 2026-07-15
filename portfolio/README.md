@@ -1,17 +1,22 @@
-# 𝕏 Portfolio — Samuel Okoosi
+# ◧ Portfolio — Samuel Okoosi (System Blueprint)
 
-A personal portfolio built to look and feel like **Twitter / X**. Your profile, skills, and projects are presented as a feed of "posts" — complete with a left nav rail, profile banner, verified badge, and a right-hand trends sidebar.
+A personal portfolio designed as a **system blueprint** — instead of hiding the engineering behind a clean marketing UI, it *uses* system architecture as the graphic design language. Rendered on graph-paper, fully monospace.
 
-Built with **Next.js 15** (App Router) and plain CSS.
+Built with **Next.js** (App Router) and plain CSS.
 
-## ✨ Features
+## 🧩 Sections
 
-- Twitter/X three-column layout (nav · feed · trends)
-- Profile header with banner, avatar, bio, follow button & stats
-- Projects shown as tweet "cards" with tech chips and links
-- Tech trends & "you might like" widgets
-- Fully responsive — collapses to icon rail, then bottom tab bar on mobile
-- Dark theme matching X's palette
+- **01 · Data Model** — the developer profile rendered as a SQL `CREATE TABLE` statement with columns, constraints, and relations
+- **02 · API Routes** — projects rendered as HTTP endpoints (`GET /projects/nexa`, method badges, status codes)
+- **03 · Service Architecture** — the tech stack rendered as a Docker `docker-compose` container map (images, ports, `depends_on`)
+- **04 · Connect** — contact details rendered as a `.env` config block
+
+## ✨ Details
+
+- Graph-paper blueprint grid background, corner-tick panel frames, engineering title block
+- Syntax-highlighted SQL, colored HTTP method badges, container cubes
+- Scroll-reveal sections, typing caret, live status indicator
+- Fully responsive; respects `prefers-reduced-motion`
 
 ## 🚀 Getting Started
 
@@ -20,21 +25,8 @@ npm install
 npm run dev      # http://localhost:3000
 ```
 
-Build for production:
-
-```bash
-npm run build
-npm run start
-```
-
-## 🧩 Customize
-
-All content lives in [`app/data.js`](app/data.js) — edit `profile`, `tweets`, `trends`, and `whoToFollow` to make it yours. No component changes needed.
-
-## 📦 Deploy
-
-Deploy free on [Vercel](https://vercel.com) (creators of Next.js): push to GitHub, import the repo, and select the `portfolio` folder as the root.
+All content lives in [`app/data.js`](app/data.js) — edit `profile`, `schema`, `endpoints`, and `containers`.
 
 ---
 
-Built with 💙 by [Samuel Okoosi](https://github.com/oksam003)
+Built by [Samuel Okoosi](https://github.com/oksam003)
