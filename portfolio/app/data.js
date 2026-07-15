@@ -45,16 +45,16 @@ export const tweets = [
     time: "1h",
     project: {
       title: "Nexa — Crypto Exchange",
-      desc: "A Bybit-style crypto & meme-coin trading platform with live prices, a TradingView-style candlestick chart, order book, and a simulated wallet. Built with Next.js 16.",
-      tech: ["Next.js", "React", "CoinGecko API", "SVG Charts"],
+      desc: "A Bybit-style crypto & meme-coin exchange: real-time WebSocket price streaming, a TradingView-style candlestick chart, live order book, user login, deposit/withdraw wallet, an AI trading assistant, and per-account balances & order history. Built with Next.js 16.",
+      tech: ["Next.js", "WebSockets", "AI Assistant", "Auth", "SVG Charts"],
       image:
         "https://images.unsplash.com/photo-1621761191319-c6fb62004040?w=800&q=80&auto=format&fit=crop",
       link: "https://github.com/oksam003/oksam003/tree/main/crypto-app",
     },
     content:
-      "🚀 Just shipped Nexa — a full crypto exchange with spot + meme-coin trading, live market data, and an interactive candlestick chart. Trade DOGE, PEPE, BTC & more 📈",
-    tags: ["#crypto", "#nextjs", "#trading", "#memecoins"],
-    stats: { replies: 51, retweets: 132, likes: 587 },
+      "🚀 Just shipped Nexa — a full crypto exchange with spot + meme-coin trading, real-time price streaming, an interactive candlestick chart, an AI assistant, and login with per-account deposit/withdraw wallets. Trade DOGE, PEPE, BTC & more 📈",
+    tags: ["#crypto", "#nextjs", "#trading", "#memecoins", "#ai"],
+    stats: { replies: 64, retweets: 158, likes: 712 },
   },
   {
     id: 4,
