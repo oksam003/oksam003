@@ -1,9 +1,9 @@
 diff --git a/test.sh b/test.sh
 new file mode 100755
-index 0000000..4cefa53
+index 0000000..c709fe6
 --- /dev/null
 +++ b/test.sh
-@@ -0,0 +1,57 @@
+@@ -0,0 +1,74 @@
 +#!/usr/bin/env bash
 +# Shipd test runner for Fraction.js.
 +#
@@ -16,8 +16,9 @@ index 0000000..4cefa53
 +#   all  -> run the whole suite (default)
 +#
 +# Writes JUnit XML to <path> via mocha's xunit reporter and exits with mocha's
-+# own status so test failures are visible through the process exit code.
-+# Package installation happens in the Dockerfile, not here.
++# own status. Resolves mocha/crude-build from the global install, a local
++# node_modules, or npx WITHOUT ever hitting the network (no package installs
++# happen here; the Dockerfile installs them globally).
 +set -u
 +
 +MODE="all"
@@ -39,9 +40,25 @@ index 0000000..4cefa53
 +  exit 2
 +fi
 +
-+# Rebuild dist/ from the (possibly patched) src so tests import current code.
-+# Building is not a package install; it just regenerates dist/fraction.js.
-+npm run build >/dev/null 2>&1
++# Resolve a binary from local node_modules, the global install, or offline npx.
++resolve() {
++  local name="$1"
++  if [ -x "node_modules/.bin/$name" ]; then
++    echo "node_modules/.bin/$name"
++  elif command -v "$name" >/dev/null 2>&1; then
++    echo "$name"
++  else
++    echo "npx --no-install $name"
++  fi
++}
++
++BUILD_BIN="$(resolve crude-build)"
++MOCHA_BIN="$(resolve mocha)"
++
++# Rebuild dist/fraction.js from the (possibly patched) src so require('fraction.js')
++# picks up the current code. dist/ is committed, so if the bundler is somehow
++# unavailable the baseline tests still have a working dist to run against.
++$BUILD_BIN Fraction >/dev/null 2>&1 || true
 +
 +NEW_TEST="tests/approximate_5545d6.test.js"
 +
@@ -57,9 +74,9 @@ index 0000000..4cefa53
 +    ;;
 +esac
 +
-+# Run the tests. mocha writes the JUnit report even on failures and exits
-+# non-zero when any test fails; propagate that status.
-+npx mocha $FILES --reporter xunit --reporter-options output="$OUTPUT_PATH"
++# mocha writes the JUnit report even on failures and exits non-zero when any
++# test fails; propagate that status.
++$MOCHA_BIN $FILES --reporter xunit --reporter-options output="$OUTPUT_PATH"
 +exit $?
 diff --git a/tests/approximate_5545d6.test.js b/tests/approximate_5545d6.test.js
 new file mode 100644

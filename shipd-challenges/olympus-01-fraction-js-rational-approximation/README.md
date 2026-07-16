@@ -42,6 +42,19 @@ brute-force search.
   `mocha@11.7.6`) since the repo ships no lockfile, and ends with
   `CMD ["/bin/bash"]` for an interactive dev shell.
 
+## Offline execution (round 5)
+
+The grader runs `test.sh` with no network, after cleaning `/app/node_modules`
+(it is gitignored). Fixes:
+
+- Dockerfile installs `mocha` and `crude-build` **globally** (`npm install -g`),
+  so they survive the node_modules reset and need no network at test time.
+- `require('fraction.js')` resolves offline through the package's `exports`
+  field to the committed `dist/`, so the package itself needs no install.
+- `test.sh` resolves the tools from local node_modules, then the global install,
+  then `npx --no-install` (which never fetches) — so it can never hit the
+  registry and 403.
+
 ## Verified
 
 Fresh clone at commit `9aa0f35`, LF working tree, patches applied before build:
