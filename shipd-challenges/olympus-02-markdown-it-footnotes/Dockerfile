@@ -5,10 +5,11 @@ WORKDIR /app
 # The pinned repo (markdown-it/markdown-it @ 2d9bbea) is the build context.
 COPY . /app
 
-# Install runtime + dev dependencies at build time (internet is available then).
+# Install runtime + dev dependencies at build time (internet is available then),
+# pinned via the committed package-lock.json for deterministic builds.
 # markdown-it's source imports mdurl, entities, linkify-it, uc.micro and
 # punycode.js, so node_modules must be present to run the tests.
-RUN npm install
+RUN npm ci
 
 # Keep a copy of node_modules outside the working tree, so test.sh can restore
 # it offline if /app/node_modules is reset before the test/solution patch is
