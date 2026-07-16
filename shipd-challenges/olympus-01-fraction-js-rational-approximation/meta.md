@@ -36,8 +36,8 @@ Reproduced on a fresh clone at the pinned commit, with an LF working tree
 
 - `test.patch` applies cleanly and adds `test.sh` (mode 100755) plus
   `tests/approximate_5545d6.test.js`.
-- Base tests only: 314 passing. New tests only (before solution): 15 failing.
-- After `solution.patch`: new suite 16 passing, full suite 330 passing.
+- Base tests only: 314 passing. New tests only (before solution): 16 failing.
+- After `solution.patch`: new suite 17 passing, full suite 331 passing.
 
 `test.sh` selects tests by mode and propagates mocha's exit code:
 

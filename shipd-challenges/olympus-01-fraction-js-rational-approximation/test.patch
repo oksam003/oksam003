@@ -63,10 +63,10 @@ index 0000000..4cefa53
 +exit $?
 diff --git a/tests/approximate_5545d6.test.js b/tests/approximate_5545d6.test.js
 new file mode 100644
-index 0000000..395a50b
+index 0000000..2449653
 --- /dev/null
 +++ b/tests/approximate_5545d6.test.js
-@@ -0,0 +1,201 @@
+@@ -0,0 +1,236 @@
 +'use strict';
 +
 +const assert = require('assert');
@@ -181,6 +181,41 @@ index 0000000..395a50b
 +        assert.ok(x.approximate(N).equals(bruteBest(x, N)), v + ' @ ' + N);
 +      }
 +    });
++  });
++
++  it('stays exact for values far beyond double precision', function () {
++    // Build a value from a continued fraction with a huge partial quotient, so
++    // its convergents have coprime denominators well beyond 2^53. A float-based
++    // implementation would collapse these onto doubles and return wrong results.
++    const cf = [0n, 2n, 3n, 100000000000000007n, 5n];
++    let h2 = 0n, h1 = 1n, k2 = 1n, k1 = 0n;
++    const conv = [];
++    for (let i = 0; i < cf.length; i++) {
++      const h = cf[i] * h1 + h2;
++      const k = cf[i] * k1 + k2;
++      conv.push([h, k]);
++      h2 = h1; h1 = h; k2 = k1; k1 = k;
++    }
++    const P = conv[conv.length - 1][0];
++    const Q = conv[conv.length - 1][1];
++    const TWO_53 = 9007199254740992n;
++    const x = new Fraction(P, Q);
++
++    // Budget >= denominator returns the exact value, digit for digit.
++    assert.strictEqual(x.approximate(Q).toFraction(), P.toString() + '/' + Q.toString());
++
++    // Any genuine convergent with a denominator beyond 2^53 must be reproduced
++    // exactly when the budget equals that convergent's denominator.
++    const big = conv.filter(function (c) { return c[1] > TWO_53 && c[1] < Q; });
++    assert.ok(big.length > 0);
++    big.forEach(function (c) {
++      const got = x.approximate(c[1]);
++      assert.strictEqual(got.toFraction(), c[0].toString() + '/' + c[1].toString());
++    });
++
++    // With a budget below the large convergent, the answer must fall back to the
++    // exact small convergent 3/7 (not something a rounded double drifts to).
++    assert.ok(x.approximate(1000n).equals(new Fraction(3, 7)));
 +  });
 +
 +  it('breaks exact-distance ties toward the smaller denominator', function () {

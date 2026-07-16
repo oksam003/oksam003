@@ -46,7 +46,14 @@ brute-force search.
 
 Fresh clone at commit `9aa0f35`, LF working tree, patches applied before build:
 
-- test.patch only: base tests 314 passing, new tests 15 failing.
-- test.patch + solution.patch: new tests 16 passing, full suite 330 passing.
+- test.patch only: base tests 314 passing, new tests 16 failing.
+- test.patch + solution.patch: new tests 17 passing, full suite 331 passing.
+
+Round-4: added an exactness test that builds a value from a continued fraction
+with a huge partial quotient (coprime denominators beyond 2^53) and asserts
+`approximate` reproduces those convergents digit-for-digit, so a float-based
+implementation cannot pass. Description trimmed further (dropped the motivation
+paragraph and other redundant lines) while keeping the tie-break rule, the
+exactness constraint, and the TypeScript requirement.
 
 See `meta.md` for exact commands, the build-order note, and the rollout gates.
