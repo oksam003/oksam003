@@ -34,6 +34,13 @@ brute-force search.
   solution patch. `test.sh` builds after patches are applied.
 - Category is `feature_request`; description is plain ASCII, no em-dashes, no
   manual mid-sentence line wrapping.
+- Tests read the denominator through the public `toFraction()` output instead
+  of the raw `.d` field, keeping assertions behavior-focused.
+- Description trimmed to essentials (dropped obvious-default bullets, the pi
+  example block, and the redundant Category section).
+- Dockerfile pins exact dependency versions (`crude-build@0.1.3`,
+  `mocha@11.7.6`) since the repo ships no lockfile, and ends with
+  `CMD ["/bin/bash"]` for an interactive dev shell.
 
 ## Verified
 

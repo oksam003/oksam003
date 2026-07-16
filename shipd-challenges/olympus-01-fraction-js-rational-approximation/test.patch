@@ -63,10 +63,10 @@ index 0000000..4cefa53
 +exit $?
 diff --git a/tests/approximate_5545d6.test.js b/tests/approximate_5545d6.test.js
 new file mode 100644
-index 0000000..48c4427
+index 0000000..395a50b
 --- /dev/null
 +++ b/tests/approximate_5545d6.test.js
-@@ -0,0 +1,193 @@
+@@ -0,0 +1,201 @@
 +'use strict';
 +
 +const assert = require('assert');
@@ -91,6 +91,14 @@ index 0000000..48c4427
 +    }
 +  }
 +  return best;
++}
++
++// Reads a fraction's denominator through the public toFraction() output, so
++// the assertions stay on behavior rather than internal fields.
++function denomOf(f) {
++  const s = f.toFraction();
++  const slash = s.indexOf('/');
++  return slash < 0 ? 1n : BigInt(s.slice(slash + 1));
 +}
 +
 +// Deterministic PRNG (mulberry32) so the suite is stable across the 6x
@@ -145,7 +153,7 @@ index 0000000..48c4427
 +      const den = Math.floor(r() * 9999) + 1;
 +      const N = Math.floor(r() * 60) + 1;
 +      const approx = new Fraction(num, den).approximate(N);
-+      assert.ok(approx.d <= BigInt(N), num + '/' + den + ' @ ' + N + ' -> d=' + approx.d);
++      assert.ok(denomOf(approx) <= BigInt(N), num + '/' + den + ' @ ' + N + ' -> ' + approx.toFraction());
 +    }
 +  });
 +
@@ -182,7 +190,7 @@ index 0000000..48c4427
 +    const x = new Fraction(5, 12);
 +    const got = x.approximate(3);
 +    assert.ok(got.equals(new Fraction(1, 2)), 'got ' + got.toFraction());
-+    assert.strictEqual(got.d, 2n);
++    assert.strictEqual(denomOf(got), 2n);
 +
 +    // Symmetric negative case.
 +    assert.ok(new Fraction(-5, 12).approximate(3).equals(new Fraction(-1, 2)));
@@ -249,7 +257,7 @@ index 0000000..48c4427
 +      // exceeds 1/2 the nearest integer is a strictly better denominator-1
 +      // approximation, so it is a special case of the theorem.
 +      x.convergents().slice(1).forEach(function (conv) {
-+        assert.ok(x.approximate(conv.d).equals(conv), v + ' @ ' + conv.toFraction());
++        assert.ok(x.approximate(denomOf(conv)).equals(conv), v + ' @ ' + conv.toFraction());
 +      });
 +    });
 +  });
