@@ -6,7 +6,8 @@ Solutions and work for **Shipd** coding challenges — organized by track.
 
 | # | Challenge | Language | Status | Notes |
 |---|-----------|----------|--------|-------|
-| 02 | [markdown-it footnotes](olympus-02-markdown-it-footnotes/) | JavaScript | ✅ verified · multi-subsystem | Add core footnote support to markdown-it/markdown-it @ `2d9bbea` (21.7k★, MIT, active). Solution spans block/inline/core/renderer (8 files) to satisfy Olympus long-horizon; offline `node --test` JUnit; verified base pass / new fail → all pass |
+| 03 | [markdown-it abbreviations](olympus-03-markdown-it-abbreviations/) | JavaScript | ✅ verified · multi-subsystem · **recommended** | Add core `<abbr>` support to markdown-it/markdown-it @ `2d9bbea`. Solution spans block parser + core token-rewrite (4 files). Differentiated from footnotes to clear the plagiarism warning; offline `node --test` JUnit; verified base pass / new fail → all pass |
+| 02 | [markdown-it footnotes](olympus-02-markdown-it-footnotes/) | JavaScript | ⚠️ plagiarism-flagged | Core footnote support (8 files, block/inline/core/renderer). Passes all checks except the similarity check (footnotes collides with an existing submission). Use olympus-03 instead |
 | 01 | [Fraction.js rational approximation](olympus-01-fraction-js-rational-approximation/) | JavaScript | ⚠️ better for non-Olympus | Add `approximate()` + `convergents()` to rawify/Fraction.js @ `9aa0f35`. Passes prechecks but single-file, so fails Olympus long-horizon (multi-subsystem). Good for a lower track |
 
 ## 🔴 Mars

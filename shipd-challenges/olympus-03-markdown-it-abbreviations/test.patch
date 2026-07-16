@@ -1,0 +1,151 @@
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 0000000..3a6586b
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,68 @@
++#!/usr/bin/env bash
++# Shipd test runner for markdown-it.
++#
++# Usage:
++#   test.sh [base|new|all] --output_path <path>
++#   test.sh --mode <base|new|all> --output_path <path>
++#
++#   base -> run only the pre-existing (baseline) tests
++#   new  -> run only the tests added by this problem
++#   all  -> run baseline + new (default)
++#
++# Uses Node's built-in test runner and JUnit reporter, so nothing is installed
++# and no network is used at test time. The tests import the source directly, so
++# no build step is needed. Exits with node's status so failures are visible
++# through the process exit code.
++set -u
++
++MODE="all"
++OUTPUT_PATH=""
++
++while [ $# -gt 0 ]; do
++  case "$1" in
++    --mode) MODE="$2"; shift 2 ;;
++    --mode=*) MODE="${1#*=}"; shift ;;
++    base|new|all) MODE="$1"; shift ;;
++    --output_path) OUTPUT_PATH="$2"; shift 2 ;;
++    --output_path=*) OUTPUT_PATH="${1#*=}"; shift ;;
++    *) shift ;;
++  esac
++done
++
++if [ -z "$OUTPUT_PATH" ]; then
++  echo "usage: test.sh [base|new|all] --output_path <path>" >&2
++  exit 2
++fi
++
++# markdown-it has runtime dependencies (mdurl, entities, linkify-it, uc.micro,
++# punycode.js). They are installed at build time; if the working tree's
++# node_modules was reset before patches were applied, restore the build-time
++# copy. This is a plain file copy, not a package install, and uses no network.
++if [ ! -d node_modules ] && [ -d /opt/node_modules_cache ]; then
++  cp -r /opt/node_modules_cache node_modules
++fi
++
++NEW_TEST="test/markdown-it/abbr_e4a7c2.test.mjs"
++NEW_BASE="$(basename "$NEW_TEST")"
++
++# Baseline files that run fully offline: exclude misc.test.mjs (needs a dev-dep
++# plugin) and pathological.test.mjs (spawns worker threads), neither of which is
++# required to demonstrate the baseline suite passing.
++self_contained() {
++  ls test/markdown-it/*.test.mjs | grep -v "$NEW_BASE" | grep -v 'misc.test.mjs' | grep -v 'pathological.test.mjs'
++}
++
++case "$MODE" in
++  new)
++    FILES="$NEW_TEST"
++    ;;
++  base)
++    FILES="$(self_contained)"
++    ;;
++  *)
++    FILES="$(self_contained) $NEW_TEST"
++    ;;
++esac
++
++node --test --test-reporter=junit --test-reporter-destination="$OUTPUT_PATH" $FILES
++exit $?
+diff --git a/test/markdown-it/abbr_e4a7c2.test.mjs b/test/markdown-it/abbr_e4a7c2.test.mjs
+new file mode 100644
+index 0000000..c6aef34
+--- /dev/null
++++ b/test/markdown-it/abbr_e4a7c2.test.mjs
+@@ -0,0 +1,71 @@
++import assert from 'node:assert/strict'
++import { describe, it } from 'node:test'
++import markdownit from '../../index.mjs'
++
++describe('abbreviations', function () {
++  const md = markdownit()
++
++  it('wraps a defined abbreviation in an abbr tag with its title', function () {
++    assert.equal(
++      md.render('The HTML spec.\n\n*[HTML]: HyperText Markup Language'),
++      '<p>The <abbr title="HyperText Markup Language">HTML</abbr> spec.</p>\n'
++    )
++  })
++
++  it('handles multiple definitions and repeated use', function () {
++    assert.equal(
++      md.render('HTML and CSS, then HTML again.\n\n*[HTML]: HyperText Markup Language\n*[CSS]: Cascading Style Sheets'),
++      '<p><abbr title="HyperText Markup Language">HTML</abbr> and ' +
++      '<abbr title="Cascading Style Sheets">CSS</abbr>, then ' +
++      '<abbr title="HyperText Markup Language">HTML</abbr> again.</p>\n'
++    )
++  })
++
++  it('respects word boundaries', function () {
++    assert.equal(
++      md.render('HTML5 and HTML end.\n\n*[HTML]: HyperText Markup Language'),
++      '<p>HTML5 and <abbr title="HyperText Markup Language">HTML</abbr> end.</p>\n'
++    )
++  })
++
++  it('works when the definition appears after the use', function () {
++    assert.equal(
++      md.render('Use HTML here.\n\n*[HTML]: HyperText Markup Language'),
++      '<p>Use <abbr title="HyperText Markup Language">HTML</abbr> here.</p>\n'
++    )
++  })
++
++  it('escapes special characters in the title', function () {
++    assert.equal(
++      md.render('W3C rules.\n\n*[W3C]: World Wide Web Consortium & friends'),
++      '<p><abbr title="World Wide Web Consortium &amp; friends">W3C</abbr> rules.</p>\n'
++    )
++  })
++
++  it('does not wrap an undefined abbreviation', function () {
++    assert.equal(md.render('Just HTML here.'), '<p>Just HTML here.</p>\n')
++  })
++
++  it('does not wrap abbreviations inside code spans', function () {
++    assert.equal(
++      md.render('`HTML` code.\n\n*[HTML]: HyperText Markup Language'),
++      '<p><code>HTML</code> code.</p>\n'
++    )
++  })
++
++  it('does not touch ordinary markdown', function () {
++    const out = md.render('Just **bold** and a [link](http://x.com).')
++    assert.equal(out, '<p>Just <strong>bold</strong> and a <a href="http://x.com">link</a>.</p>\n')
++    assert.ok(!out.includes('<abbr'))
++  })
++
++  it('does not leak definitions between renders', function () {
++    const md2 = markdownit()
++    assert.equal(
++      md2.render('HTML one.\n\n*[HTML]: HyperText Markup Language'),
++      '<p><abbr title="HyperText Markup Language">HTML</abbr> one.</p>\n'
++    )
++    // second render has no definition, so nothing should be wrapped
++    assert.equal(md2.render('HTML two.'), '<p>HTML two.</p>\n')
++  })
++})
