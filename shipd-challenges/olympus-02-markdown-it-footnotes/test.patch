@@ -1,0 +1,177 @@
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 0000000..db6b00a
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,68 @@
++#!/usr/bin/env bash
++# Shipd test runner for markdown-it.
++#
++# Usage:
++#   test.sh [base|new|all] --output_path <path>
++#   test.sh --mode <base|new|all> --output_path <path>
++#
++#   base -> run only the pre-existing (baseline) tests
++#   new  -> run only the tests added by this problem
++#   all  -> run baseline + new (default)
++#
++# Uses Node's built-in test runner and JUnit reporter, so nothing is installed
++# and no network is used at test time. markdown-it has no runtime dependencies
++# and the tests import the source directly, so no build step is needed either.
++# Exits with node's status so failures are visible through the process exit code.
++set -u
++
++MODE="all"
++OUTPUT_PATH=""
++
++while [ $# -gt 0 ]; do
++  case "$1" in
++    --mode) MODE="$2"; shift 2 ;;
++    --mode=*) MODE="${1#*=}"; shift ;;
++    base|new|all) MODE="$1"; shift ;;
++    --output_path) OUTPUT_PATH="$2"; shift 2 ;;
++    --output_path=*) OUTPUT_PATH="${1#*=}"; shift ;;
++    *) shift ;;
++  esac
++done
++
++if [ -z "$OUTPUT_PATH" ]; then
++  echo "usage: test.sh [base|new|all] --output_path <path>" >&2
++  exit 2
++fi
++
++# markdown-it has runtime dependencies (mdurl, entities, linkify-it, uc.micro,
++# punycode.js). They are installed at build time; if the working tree's
++# node_modules was reset before patches were applied, restore the build-time
++# copy. This is a plain file copy, not a package install, and uses no network.
++if [ ! -d node_modules ] && [ -d /opt/node_modules_cache ]; then
++  cp -r /opt/node_modules_cache node_modules
++fi
++
++NEW_TEST="test/markdown-it/footnote_363229.test.mjs"
++NEW_BASE="$(basename "$NEW_TEST")"
++
++# Baseline files that run fully offline: exclude misc.test.mjs (needs a dev-dep
++# plugin) and pathological.test.mjs (spawns worker threads), neither of which is
++# required to demonstrate the baseline suite passing.
++self_contained() {
++  ls test/markdown-it/*.test.mjs | grep -v "$NEW_BASE" | grep -v 'misc.test.mjs' | grep -v 'pathological.test.mjs'
++}
++
++case "$MODE" in
++  new)
++    FILES="$NEW_TEST"
++    ;;
++  base)
++    FILES="$(self_contained)"
++    ;;
++  *)
++    FILES="$(self_contained) $NEW_TEST"
++    ;;
++esac
++
++node --test --test-reporter=junit --test-reporter-destination="$OUTPUT_PATH" $FILES
++exit $?
+diff --git a/test/markdown-it/footnote_363229.test.mjs b/test/markdown-it/footnote_363229.test.mjs
+new file mode 100644
+index 0000000..692c138
+--- /dev/null
++++ b/test/markdown-it/footnote_363229.test.mjs
+@@ -0,0 +1,97 @@
++import assert from 'node:assert/strict'
++import { describe, it } from 'node:test'
++import markdownit from '../../index.mjs'
++
++const BR = '↩︎' // U+21A9 + variation selector, used in the backref link
++
++describe('footnotes', function () {
++  const md = markdownit()
++
++  it('renders a reference footnote and its definition', function () {
++    assert.equal(
++      md.render('Here is a footnote[^1].\n\n[^1]: Footnote **text**.'),
++      '<p>Here is a footnote<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>.</p>\n' +
++      '<hr class="footnotes-sep">\n<section class="footnotes">\n<ol class="footnotes-list">\n' +
++      '<li id="fn1" class="footnote-item"><p>Footnote <strong>text</strong>. ' +
++      '<a href="#fnref1" class="footnote-backref">' + BR + '</a></p>\n</li>\n</ol>\n</section>\n'
++    )
++  })
++
++  it('numbers multiple footnotes in document order', function () {
++    assert.equal(
++      md.render('A[^a] and B[^b].\n\n[^a]: first\n\n[^b]: second'),
++      '<p>A<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> and ' +
++      'B<sup class="footnote-ref"><a href="#fn2" id="fnref2">[2]</a></sup>.</p>\n' +
++      '<hr class="footnotes-sep">\n<section class="footnotes">\n<ol class="footnotes-list">\n' +
++      '<li id="fn1" class="footnote-item"><p>first <a href="#fnref1" class="footnote-backref">' + BR + '</a></p>\n</li>\n' +
++      '<li id="fn2" class="footnote-item"><p>second <a href="#fnref2" class="footnote-backref">' + BR + '</a></p>\n</li>\n' +
++      '</ol>\n</section>\n'
++    )
++  })
++
++  it('links repeated references to the same footnote with distinct backrefs', function () {
++    assert.equal(
++      md.render('See[^x] and again[^x].\n\n[^x]: shared'),
++      '<p>See<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> and ' +
++      'again<sup class="footnote-ref"><a href="#fn1" id="fnref1:1">[1:1]</a></sup>.</p>\n' +
++      '<hr class="footnotes-sep">\n<section class="footnotes">\n<ol class="footnotes-list">\n' +
++      '<li id="fn1" class="footnote-item"><p>shared ' +
++      '<a href="#fnref1" class="footnote-backref">' + BR + '</a> ' +
++      '<a href="#fnref1:1" class="footnote-backref">' + BR + '</a></p>\n</li>\n</ol>\n</section>\n'
++    )
++  })
++
++  it('supports inline footnotes with the caret-bracket syntax', function () {
++    assert.equal(
++      md.render('Note^[inline content] here.'),
++      '<p>Note<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup> here.</p>\n' +
++      '<hr class="footnotes-sep">\n<section class="footnotes">\n<ol class="footnotes-list">\n' +
++      '<li id="fn1" class="footnote-item"><p>inline content <a href="#fnref1" class="footnote-backref">' + BR + '</a></p>\n</li>\n</ol>\n</section>\n'
++    )
++  })
++
++  it('allows the definition to appear before the reference', function () {
++    assert.equal(
++      md.render('[^1]: defined first\n\nUse it[^1].'),
++      '<p>Use it<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>.</p>\n' +
++      '<hr class="footnotes-sep">\n<section class="footnotes">\n<ol class="footnotes-list">\n' +
++      '<li id="fn1" class="footnote-item"><p>defined first <a href="#fnref1" class="footnote-backref">' + BR + '</a></p>\n</li>\n</ol>\n</section>\n'
++    )
++  })
++
++  it('supports multi-paragraph footnote definitions', function () {
++    assert.equal(
++      md.render('X[^1].\n\n[^1]: Para one.\n\n    Para two.'),
++      '<p>X<sup class="footnote-ref"><a href="#fn1" id="fnref1">[1]</a></sup>.</p>\n' +
++      '<hr class="footnotes-sep">\n<section class="footnotes">\n<ol class="footnotes-list">\n' +
++      '<li id="fn1" class="footnote-item"><p>Para one.</p>\n' +
++      '<p>Para two. <a href="#fnref1" class="footnote-backref">' + BR + '</a></p>\n</li>\n</ol>\n</section>\n'
++    )
++  })
++
++  it('prefixes anchors with env.docId when provided', function () {
++    const out = md.render('X[^1].\n\n[^1]: note', { docId: 'doc' })
++    assert.match(out, /href="#fn-doc-1"/)
++    assert.match(out, /id="fnref-doc-1"/)
++    assert.match(out, /<li id="fn-doc-1" class="footnote-item">/)
++  })
++
++  it('leaves an undefined footnote reference as literal text', function () {
++    const out = md.render('Ref to [^missing] nothing.')
++    assert.equal(out, '<p>Ref to [^missing] nothing.</p>\n')
++    assert.ok(!out.includes('footnotes'))
++  })
++
++  it('does not emit a footnotes section for ordinary markdown', function () {
++    const out = md.render('Just **bold** and a [link](http://x.com).')
++    assert.equal(out, '<p>Just <strong>bold</strong> and a <a href="http://x.com">link</a>.</p>\n')
++    assert.ok(!out.includes('footnote'))
++  })
++
++  it('leaves an unresolved reference literal without leaking state between renders', function () {
++    const md2 = markdownit()
++    assert.equal(md2.render('text[^1]'), '<p>text[^1]</p>\n')
++    // a second render on the same instance must not be affected by the first
++    assert.equal(md2.render('again[^2]'), '<p>again[^2]</p>\n')
++  })
++})

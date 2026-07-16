@@ -1,0 +1,431 @@
+diff --git a/lib/parser_block.mjs b/lib/parser_block.mjs
+index 36e0109..2b7d88f 100644
+--- a/lib/parser_block.mjs
++++ b/lib/parser_block.mjs
+@@ -14,6 +14,7 @@ import r_blockquote from './rules_block/blockquote.mjs'
+ import r_hr from './rules_block/hr.mjs'
+ import r_list from './rules_block/list.mjs'
+ import r_reference from './rules_block/reference.mjs'
++import r_footnote_def from './rules_block/footnote_def.mjs'
+ import r_html_block from './rules_block/html_block.mjs'
+ import r_heading from './rules_block/heading.mjs'
+ import r_lheading from './rules_block/lheading.mjs'
+@@ -28,6 +29,7 @@ const _rules = [
+   ['blockquote', r_blockquote, ['paragraph', 'reference', 'blockquote', 'list']],
+   ['hr', r_hr, ['paragraph', 'reference', 'blockquote', 'list']],
+   ['list', r_list, ['paragraph', 'reference', 'blockquote']],
++  ['footnote_def', r_footnote_def, ['paragraph', 'reference']],
+   ['reference', r_reference],
+   ['html_block', r_html_block, ['paragraph', 'reference', 'blockquote']],
+   ['heading', r_heading, ['paragraph', 'reference', 'blockquote']],
+diff --git a/lib/parser_core.mjs b/lib/parser_core.mjs
+index 4337554..1767d67 100644
+--- a/lib/parser_core.mjs
++++ b/lib/parser_core.mjs
+@@ -11,6 +11,7 @@ import StateCore from './rules_core/state_core.mjs'
+ import r_normalize from './rules_core/normalize.mjs'
+ import r_block from './rules_core/block.mjs'
+ import r_inline from './rules_core/inline.mjs'
++import r_footnote_tail from './rules_core/footnote_tail.mjs'
+ import r_linkify from './rules_core/linkify.mjs'
+ import r_replacements from './rules_core/replacements.mjs'
+ import r_smartquotes from './rules_core/smartquotes.mjs'
+@@ -20,6 +21,7 @@ const _rules = [
+   ['normalize', r_normalize],
+   ['block', r_block],
+   ['inline', r_inline],
++  ['footnote_tail', r_footnote_tail],
+   ['linkify', r_linkify],
+   ['replacements', r_replacements],
+   ['smartquotes', r_smartquotes],
+diff --git a/lib/parser_inline.mjs b/lib/parser_inline.mjs
+index 9f7bb4c..fde5d59 100644
+--- a/lib/parser_inline.mjs
++++ b/lib/parser_inline.mjs
+@@ -16,6 +16,8 @@ import r_strikethrough from './rules_inline/strikethrough.mjs'
+ import r_emphasis from './rules_inline/emphasis.mjs'
+ import r_link from './rules_inline/link.mjs'
+ import r_image from './rules_inline/image.mjs'
++import r_footnote_inline from './rules_inline/footnote_inline.mjs'
++import r_footnote_ref from './rules_inline/footnote_ref.mjs'
+ import r_autolink from './rules_inline/autolink.mjs'
+ import r_html_inline from './rules_inline/html_inline.mjs'
+ import r_entity from './rules_inline/entity.mjs'
+@@ -35,6 +37,8 @@ const _rules = [
+   ['emphasis', r_emphasis.tokenize],
+   ['link', r_link],
+   ['image', r_image],
++  ['footnote_inline', r_footnote_inline],
++  ['footnote_ref', r_footnote_ref],
+   ['autolink', r_autolink],
+   ['html_inline', r_html_inline],
+   ['entity', r_entity]
+diff --git a/lib/renderer.mjs b/lib/renderer.mjs
+index 6466a17..b0fd560 100644
+--- a/lib/renderer.mjs
++++ b/lib/renderer.mjs
+@@ -106,6 +106,67 @@ default_rules.html_inline = function (tokens, idx /*, options, env */) {
+   return tokens[idx].content
+ }
+ 
++// Footnote rendering -------------------------------------------------------
++// `footnote_anchor_name` and `footnote_caption` are internal helpers invoked
++// through `slf.rules` by the other footnote render rules.
++default_rules.footnote_anchor_name = function (tokens, idx, options, env /*, slf */) {
++  const n = Number(tokens[idx].meta.id + 1).toString()
++  let prefix = ''
++
++  if (typeof env.docId === 'string') prefix = `-${env.docId}-`
++
++  return prefix + n
++}
++
++default_rules.footnote_caption = function (tokens, idx /*, options, env, slf */) {
++  let n = Number(tokens[idx].meta.id + 1).toString()
++
++  if (tokens[idx].meta.subId > 0) n += `:${tokens[idx].meta.subId}`
++
++  return `[${n}]`
++}
++
++default_rules.footnote_ref = function (tokens, idx, options, env, slf) {
++  const id = slf.rules.footnote_anchor_name(tokens, idx, options, env, slf)
++  const caption = slf.rules.footnote_caption(tokens, idx, options, env, slf)
++  let refid = id
++
++  if (tokens[idx].meta.subId > 0) refid += `:${tokens[idx].meta.subId}`
++
++  return `<sup class="footnote-ref"><a href="#fn${id}" id="fnref${refid}">${caption}</a></sup>`
++}
++
++default_rules.footnote_block_open = function (tokens, idx, options) {
++  return (options.xhtmlOut ? '<hr class="footnotes-sep" />\n' : '<hr class="footnotes-sep">\n') +
++         '<section class="footnotes">\n' +
++         '<ol class="footnotes-list">\n'
++}
++
++default_rules.footnote_block_close = function () {
++  return '</ol>\n</section>\n'
++}
++
++default_rules.footnote_open = function (tokens, idx, options, env, slf) {
++  let id = slf.rules.footnote_anchor_name(tokens, idx, options, env, slf)
++
++  if (tokens[idx].meta.subId > 0) id += `:${tokens[idx].meta.subId}`
++
++  return `<li id="fn${id}" class="footnote-item">`
++}
++
++default_rules.footnote_close = function () {
++  return '</li>\n'
++}
++
++default_rules.footnote_anchor = function (tokens, idx, options, env, slf) {
++  let id = slf.rules.footnote_anchor_name(tokens, idx, options, env, slf)
++
++  if (tokens[idx].meta.subId > 0) id += `:${tokens[idx].meta.subId}`
++
++  /* U+21A9 with variation selector to prevent Apple emoji rendering on iOS */
++  return ` <a href="#fnref${id}" class="footnote-backref">↩︎</a>`
++}
++
+ /**
+  * new Renderer()
+  *
+diff --git a/lib/rules_block/footnote_def.mjs b/lib/rules_block/footnote_def.mjs
+new file mode 100644
+index 0000000..0ecd576
+--- /dev/null
++++ b/lib/rules_block/footnote_def.mjs
+@@ -0,0 +1,89 @@
++// Process footnote block definitions, e.g. `[^id]: footnote text`
++//
++import { isSpace } from '../common/utils.mjs'
++
++export default function footnote_def (state, startLine, endLine, silent) {
++  const start = state.bMarks[startLine] + state.tShift[startLine]
++  const max = state.eMarks[startLine]
++
++  // line should be at least 5 chars - "[^x]:"
++  if (start + 4 > max) return false
++
++  if (state.src.charCodeAt(start) !== 0x5B/* [ */) return false
++  if (state.src.charCodeAt(start + 1) !== 0x5E/* ^ */) return false
++
++  let pos
++
++  for (pos = start + 2; pos < max; pos++) {
++    if (state.src.charCodeAt(pos) === 0x20) return false
++    if (state.src.charCodeAt(pos) === 0x5D /* ] */) {
++      break
++    }
++  }
++
++  if (pos === start + 2) return false // no empty footnote labels
++  if (pos + 1 >= max || state.src.charCodeAt(++pos) !== 0x3A /* : */) return false
++  if (!state.env) return false // footnotes need an env to store definitions in
++  if (silent) return true
++  pos++
++
++  if (!state.env.footnotes) state.env.footnotes = {}
++  if (!state.env.footnotes.refs) state.env.footnotes.refs = {}
++  const label = state.src.slice(start + 2, pos - 2)
++  state.env.footnotes.refs[`:${label}`] = -1
++
++  const token_fref_o = new state.Token('footnote_reference_open', '', 1)
++  token_fref_o.meta = { label }
++  token_fref_o.level = state.level++
++  state.tokens.push(token_fref_o)
++
++  const oldBMark = state.bMarks[startLine]
++  const oldTShift = state.tShift[startLine]
++  const oldSCount = state.sCount[startLine]
++  const oldParentType = state.parentType
++
++  const posAfterColon = pos
++  const initial = state.sCount[startLine] + pos - (state.bMarks[startLine] + state.tShift[startLine])
++  let offset = initial
++
++  while (pos < max) {
++    const ch = state.src.charCodeAt(pos)
++
++    if (isSpace(ch)) {
++      if (ch === 0x09) {
++        offset += 4 - offset % 4
++      } else {
++        offset++
++      }
++    } else {
++      break
++    }
++
++    pos++
++  }
++
++  state.tShift[startLine] = pos - posAfterColon
++  state.sCount[startLine] = offset - initial
++
++  state.bMarks[startLine] = posAfterColon
++  state.blkIndent += 4
++  state.parentType = 'footnote'
++
++  if (state.sCount[startLine] < state.blkIndent) {
++    state.sCount[startLine] += state.blkIndent
++  }
++
++  state.md.block.tokenize(state, startLine, endLine, true)
++
++  state.parentType = oldParentType
++  state.blkIndent -= 4
++  state.tShift[startLine] = oldTShift
++  state.sCount[startLine] = oldSCount
++  state.bMarks[startLine] = oldBMark
++
++  const token_fref_c = new state.Token('footnote_reference_close', '', -1)
++  token_fref_c.level = --state.level
++  state.tokens.push(token_fref_c)
++
++  return true
++}
+diff --git a/lib/rules_core/footnote_tail.mjs b/lib/rules_core/footnote_tail.mjs
+new file mode 100644
+index 0000000..f98f12f
+--- /dev/null
++++ b/lib/rules_core/footnote_tail.mjs
+@@ -0,0 +1,84 @@
++// Glue footnote tokens to the end of the token stream and build the
++// footnote list block.
++//
++export default function footnote_tail (state) {
++  let tokens
++  let current
++  let currentLabel
++  let insideRef = false
++  const refTokens = {}
++
++  if (!state.env || !state.env.footnotes) { return }
++
++  state.tokens = state.tokens.filter(function (tok) {
++    if (tok.type === 'footnote_reference_open') {
++      insideRef = true
++      current = []
++      currentLabel = tok.meta.label
++      return false
++    }
++    if (tok.type === 'footnote_reference_close') {
++      insideRef = false
++      // prepend ':' to avoid conflict with Object.prototype members
++      refTokens[':' + currentLabel] = current
++      return false
++    }
++    if (insideRef) { current.push(tok) }
++    return !insideRef
++  })
++
++  if (!state.env.footnotes.list) { return }
++  const list = state.env.footnotes.list
++
++  state.tokens.push(new state.Token('footnote_block_open', '', 1))
++
++  for (let i = 0, l = list.length; i < l; i++) {
++    const token_fo = new state.Token('footnote_open', '', 1)
++    token_fo.meta = { id: i, label: list[i].label }
++    state.tokens.push(token_fo)
++
++    if (list[i].tokens) {
++      tokens = []
++
++      const token_po = new state.Token('paragraph_open', 'p', 1)
++      token_po.block = true
++      tokens.push(token_po)
++
++      const token_i = new state.Token('inline', '', 0)
++      token_i.children = list[i].tokens
++      token_i.content = list[i].content
++      tokens.push(token_i)
++
++      const token_pc = new state.Token('paragraph_close', 'p', -1)
++      token_pc.block = true
++      tokens.push(token_pc)
++    } else if (list[i].label) {
++      tokens = refTokens[`:${list[i].label}`]
++    }
++
++    if (tokens) state.tokens = state.tokens.concat(tokens)
++
++    let lastParagraph
++
++    if (state.tokens[state.tokens.length - 1].type === 'paragraph_close') {
++      lastParagraph = state.tokens.pop()
++    } else {
++      lastParagraph = null
++    }
++
++    const t = list[i].count > 0 ? list[i].count : 1
++    for (let j = 0; j < t; j++) {
++      const token_a = new state.Token('footnote_anchor', '', 0)
++      token_a.meta = { id: i, subId: j, label: list[i].label }
++      state.tokens.push(token_a)
++    }
++
++    if (lastParagraph) {
++      state.tokens.push(lastParagraph)
++    }
++
++    state.tokens.push(new state.Token('footnote_close', '', -1))
++  }
++
++  state.tokens.push(new state.Token('footnote_block_close', '', -1))
++}
+diff --git a/lib/rules_inline/footnote_inline.mjs b/lib/rules_inline/footnote_inline.mjs
+new file mode 100644
+index 0000000..3df798e
+--- /dev/null
++++ b/lib/rules_inline/footnote_inline.mjs
+@@ -0,0 +1,46 @@
++// Process inline footnotes, e.g. `^[inline footnote text]`
++//
++export default function footnote_inline (state, silent) {
++  const max = state.posMax
++  const start = state.pos
++
++  if (start + 2 >= max) return false
++  if (state.src.charCodeAt(start) !== 0x5E/* ^ */) return false
++  if (state.src.charCodeAt(start + 1) !== 0x5B/* [ */) return false
++
++  const labelStart = start + 2
++  const labelEnd = state.md.helpers.parseLinkLabel(state, start + 1)
++
++  // parser failed to find ']', so it's not a valid note
++  if (labelEnd < 0) return false
++  if (!state.env) return false // footnotes need an env to store content in
++
++  // We found the end of the link, and know for a fact it's a valid link;
++  // so all that's left to do is to call tokenizer.
++  //
++  if (!silent) {
++    if (!state.env.footnotes) state.env.footnotes = {}
++    if (!state.env.footnotes.list) state.env.footnotes.list = []
++    const footnoteId = state.env.footnotes.list.length
++    const tokens = []
++
++    state.md.inline.parse(
++      state.src.slice(labelStart, labelEnd),
++      state.md,
++      state.env,
++      tokens
++    )
++
++    const token = state.push('footnote_ref', '', 0)
++    token.meta = { id: footnoteId }
++
++    state.env.footnotes.list[footnoteId] = {
++      content: state.src.slice(labelStart, labelEnd),
++      tokens
++    }
++  }
++
++  state.pos = labelEnd + 1
++  state.posMax = max
++  return true
++}
+diff --git a/lib/rules_inline/footnote_ref.mjs b/lib/rules_inline/footnote_ref.mjs
+new file mode 100644
+index 0000000..378158b
+--- /dev/null
++++ b/lib/rules_inline/footnote_ref.mjs
+@@ -0,0 +1,54 @@
++// Process footnote references, e.g. `[^id]`
++//
++export default function footnote_ref (state, silent) {
++  const max = state.posMax
++  const start = state.pos
++
++  // should be at least 4 chars - "[^x]"
++  if (start + 3 > max) return false
++
++  if (!state.env || !state.env.footnotes || !state.env.footnotes.refs) return false
++  if (state.src.charCodeAt(start) !== 0x5B/* [ */) return false
++  if (state.src.charCodeAt(start + 1) !== 0x5E/* ^ */) return false
++
++  let pos
++
++  for (pos = start + 2; pos < max; pos++) {
++    if (state.src.charCodeAt(pos) === 0x20) return false
++    if (state.src.charCodeAt(pos) === 0x0A) return false
++    if (state.src.charCodeAt(pos) === 0x5D /* ] */) {
++      break
++    }
++  }
++
++  if (pos === start + 2) return false // no empty footnote labels
++  if (pos >= max) return false
++  pos++
++
++  const label = state.src.slice(start + 2, pos - 1)
++  if (typeof state.env.footnotes.refs[`:${label}`] === 'undefined') return false
++
++  if (!silent) {
++    if (!state.env.footnotes.list) state.env.footnotes.list = []
++
++    let footnoteId
++
++    if (state.env.footnotes.refs[`:${label}`] < 0) {
++      footnoteId = state.env.footnotes.list.length
++      state.env.footnotes.list[footnoteId] = { label, count: 0 }
++      state.env.footnotes.refs[`:${label}`] = footnoteId
++    } else {
++      footnoteId = state.env.footnotes.refs[`:${label}`]
++    }
++
++    const footnoteSubId = state.env.footnotes.list[footnoteId].count
++    state.env.footnotes.list[footnoteId].count++
++
++    const token = state.push('footnote_ref', '', 0)
++    token.meta = { id: footnoteId, subId: footnoteSubId, label }
++  }
++
++  state.pos = pos
++  state.posMax = max
++  return true
++}
