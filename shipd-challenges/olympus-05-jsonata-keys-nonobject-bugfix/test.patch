@@ -100,35 +100,34 @@ index 0000000..2e82fba
 +chai.use(chaiAsPromised);
 diff --git a/test/keys_nonobject_c4e91a.js b/test/keys_nonobject_c4e91a.js
 new file mode 100644
-index 0000000..ece673c
+index 0000000..a46afb4
 --- /dev/null
 +++ b/test/keys_nonobject_c4e91a.js
-@@ -0,0 +1,61 @@
+@@ -0,0 +1,60 @@
 +"use strict";
 +
 +var jsonata = require('../src/jsonata');
 +var chai = require("chai");
 +var expect = chai.expect;
-+var chaiAsPromised = require("chai-as-promised");
-+chai.use(chaiAsPromised);
++// chai-as-promised is registered globally by test/chai_setup_c4e91a.js,
++// loaded via mocha's --require, so it is not re-registered here.
 +
 +function evaluate(expr, data) {
 +    return jsonata(expr).evaluate(data);
 +}
 +
-+// Regression: functions that iterate an object's keys must treat a
-+// non-object (undefined) argument as having no keys, returning undefined,
-+// rather than throwing "Cannot convert undefined or null to object".
-+describe('object-key iteration over a non-object', function () {
++// `input.missing` is a path that matches nothing, so it evaluates to undefined
++// without relying on undeclared-variable semantics.
++var DATA = { input: {} };
++
++// Regression: functions that iterate an object's keys must treat an undefined
++// argument as having no keys, returning undefined, rather than throwing
++// "Cannot convert undefined or null to object".
++describe('object-key iteration over an undefined argument', function () {
 +
 +    describe('$each', function () {
 +        it('returns undefined for an undefined argument', function () {
-+            return expect(evaluate('$each($missing, function($v, $k){ $v })'))
-+                .to.eventually.equal(undefined);
-+        });
-+
-+        it('returns undefined when the argument path is absent', function () {
-+            return expect(evaluate('$each(input.data, function($v, $k){ $v })', { input: {} }))
++            return expect(evaluate('$each(input.missing, function($v, $k){ $v })', DATA))
 +                .to.eventually.equal(undefined);
 +        });
 +
@@ -141,7 +140,7 @@ index 0000000..ece673c
 +
 +    describe('$sift', function () {
 +        it('returns undefined for an undefined argument', function () {
-+            return expect(evaluate('$sift($missing, function($v){ $v > 1 })'))
++            return expect(evaluate('$sift(input.missing, function($v){ $v > 1 })', DATA))
 +                .to.eventually.equal(undefined);
 +        });
 +
@@ -151,17 +150,17 @@ index 0000000..ece673c
 +        });
 +    });
 +
-+    describe('other key-based functions tolerate a non-object', function () {
-+        it('$keys returns undefined for an undefined argument', function () {
-+            return expect(evaluate('$keys($missing)')).to.eventually.equal(undefined);
++    describe('other key-based functions tolerate an undefined argument', function () {
++        it('$keys returns undefined', function () {
++            return expect(evaluate('$keys(input.missing)', DATA)).to.eventually.equal(undefined);
 +        });
 +
-+        it('$spread returns undefined for an undefined argument', function () {
-+            return expect(evaluate('$spread($missing)')).to.eventually.equal(undefined);
++        it('$spread returns undefined', function () {
++            return expect(evaluate('$spread(input.missing)', DATA)).to.eventually.equal(undefined);
 +        });
 +
-+        it('$merge returns undefined for an undefined argument', function () {
-+            return expect(evaluate('$merge($missing)')).to.eventually.equal(undefined);
++        it('$merge returns undefined', function () {
++            return expect(evaluate('$merge(input.missing)', DATA)).to.eventually.equal(undefined);
 +        });
 +    });
 +});
