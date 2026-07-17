@@ -1,0 +1,186 @@
+diff --git a/src/datetime.js b/src/datetime.js
+index 3710ac4..1ccb201 100644
+--- a/src/datetime.js
++++ b/src/datetime.js
+@@ -1059,7 +1059,7 @@ const dateTime = (function () {
+                     };
+                     break;
+                 case formats.WORDS:
+-                    matcher.regex = '(?:' + Object.keys(wordValues).concat('and', '[\\-, ]').join('|') + ')+';
++                    matcher.regex = '(?:' + utils.keys(wordValues).concat('and', '[\\-, ]').join('|') + ')+';
+                     matcher.parse = function (value) {
+                         return wordsToNumber(value.toLowerCase());
+                     };
+diff --git a/src/functions.js b/src/functions.js
+index 1c0f8f5..da0479e 100644
+--- a/src/functions.js
++++ b/src/functions.js
+@@ -793,7 +793,7 @@ const functions = (() => {
+         // if `options` is specified, then its entries override defaults
+         var properties = defaults;
+         if (typeof options !== 'undefined') {
+-            Object.keys(options).forEach(function (key) {
++            utils.keys(options).forEach(function (key) {
+                 properties[key] = options[key];
+             });
+         }
+@@ -1432,7 +1432,7 @@ const functions = (() => {
+                 result = true;
+             }
+         } else if (arg !== null && typeof arg === 'object' && !isFunction(arg)) {
+-            if (Object.keys(arg).length > 0) {
++            if (utils.keys(arg).length > 0) {
+                 result = true;
+             }
+         } else if (typeof arg === 'boolean' && arg === true) {
+@@ -1671,7 +1671,7 @@ const functions = (() => {
+             }
+             result = keys.call(this, merge);
+         } else if (arg !== null && typeof arg === 'object' && !isFunction(arg)) {
+-            Object.keys(arg).forEach(key => result.push(key));
++            utils.keys(arg).forEach(key => result.push(key));
+         }
+         return result;
+     }
+@@ -1763,7 +1763,7 @@ const functions = (() => {
+                 result = append.call(this, result, spread.call(this, arg[ii]));
+             }
+         } else if (arg !== null && typeof arg === 'object' && !isLambda(arg)) {
+-            for (const key of Object.keys(arg)) {
++            for (const key of utils.keys(arg)) {
+                 var obj = Object.create(null);
+                 obj[key] = arg[key];
+                 result.push(obj);
+@@ -1789,7 +1789,7 @@ const functions = (() => {
+         var result = Object.create(null);
+ 
+         arg.forEach(function (obj) {
+-            for (const prop of Object.keys(obj)) {
++            for (const prop of utils.keys(obj)) {
+                 result[prop] = obj[prop];
+             }
+         });
+@@ -1829,7 +1829,7 @@ const functions = (() => {
+     async function each(obj, func) {
+         var result = this.createSequence();
+ 
+-        for (const key of Object.keys(obj)) {
++        for (const key of utils.keys(obj)) {
+             var func_args = hofFuncArgs(func, obj[key], key, obj);
+             // invoke func
+             var val = await func.apply(this, func_args);
+@@ -2058,7 +2058,7 @@ const functions = (() => {
+     async function sift(arg, func) {
+         var result = Object.create(null);
+ 
+-        for (const item of Object.keys(arg)) {
++        for (const item of utils.keys(arg)) {
+             var entry = arg[item];
+             var func_args = hofFuncArgs(func, entry, item, arg);
+             // invoke func
+@@ -2069,7 +2069,7 @@ const functions = (() => {
+         }
+ 
+         // empty objects should be changed to undefined
+-        if (Object.keys(result).length === 0) {
++        if (utils.keys(result).length === 0) {
+             result = undefined;
+         }
+ 
+diff --git a/src/jsonata.js b/src/jsonata.js
+index 4174e2d..9ac96a5 100644
+--- a/src/jsonata.js
++++ b/src/jsonata.js
+@@ -228,7 +228,7 @@ var jsonata = (function() {
+ 
+     function createFrameFromTuple(environment, tuple) {
+         var frame = createFrame(environment);
+-        for(const prop of Object.keys(tuple)) {
++        for(const prop of utils.keys(tuple)) {
+             frame.bind(prop, tuple[prop]);
+         }
+         return frame;
+@@ -609,7 +609,7 @@ var jsonata = (function() {
+             input = input[0];
+         }
+         if (input !== null && typeof input === 'object' && !isFunction(input)) {
+-            Object.keys(input).forEach(function (key) {
++            utils.keys(input).forEach(function (key) {
+                 var value = input[key];
+                 if(Array.isArray(value)) {
+                     value = flatten(value);
+@@ -680,7 +680,7 @@ var jsonata = (function() {
+                 recurseDescendants(member, results);
+             });
+         } else if (input !== null && typeof input === 'object' && !isFunction(input)) {
+-            Object.keys(input).forEach(function (key) {
++            utils.keys(input).forEach(function (key) {
+                 recurseDescendants(input[key], results);
+             });
+         }
+@@ -979,7 +979,7 @@ var jsonata = (function() {
+         }
+ 
+         // iterate over the groups to evaluate the 'value' expression
+-        let generators = await Promise.all(Object.keys(groups).map(async (key, idx) => {
++        let generators = await Promise.all(utils.keys(groups).map(async (key, idx) => {
+             let entry = groups[key];
+             var context = entry.data;
+             var env = environment;
+@@ -1014,7 +1014,7 @@ var jsonata = (function() {
+         };
+         Object.assign(result, tupleStream[0]);
+         for(var ii = 1; ii < tupleStream.length; ii++) {
+-            for(const prop of Object.keys(tupleStream[ii])) {
++            for(const prop of utils.keys(tupleStream[ii])) {
+                 result[prop] = fn.append.call(focus, result[prop], tupleStream[ii][prop]);
+             }
+         }
+@@ -1348,7 +1348,7 @@ var jsonata = (function() {
+                             };
+                         }
+                         // merge the update
+-                        for(const prop of Object.keys(update)) {
++                        for(const prop of utils.keys(update)) {
+                             match[prop] = update[prop];
+                         }
+                     }
+@@ -2160,7 +2160,7 @@ var jsonata = (function() {
+                     var exec_env;
+                     // the variable bindings have been passed in - create a frame to hold these
+                     exec_env = createFrame(environment);
+-                    for (const v of Object.keys(bindings)) {
++                    for (const v of utils.keys(bindings)) {
+                         exec_env.bind(v, bindings[v]);
+                     }
+                 } else {
+diff --git a/src/utils.js b/src/utils.js
+index 15cb979..b5c7585 100644
+--- a/src/utils.js
++++ b/src/utils.js
+@@ -187,6 +187,15 @@ const utils = (() => {
+         return arr;
+     }
+ 
++    /**
++     *
++     * @param {Object} arg - the object to inspect
++     * @returns {Array} - the keys (property names) of the object
++     */
++    function keys(arg) {
++        return typeof arg === 'object' && arg !== null ? Object.keys(arg) : [];
++    }
++
+     return {
+         isNumeric,
+         isArrayOfStrings,
+@@ -198,7 +207,8 @@ const utils = (() => {
+         getFunctionArity,
+         isDeepEqual,
+         stringToArray,
+-        isPromise
++        isPromise,
++        keys
+     };
+ })();
+ 

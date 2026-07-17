@@ -1,0 +1,166 @@
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 0000000..77afd78
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,79 @@
++#!/usr/bin/env bash
++# Shipd test runner for jsonata.
++#
++# Usage:
++#   test.sh [base|new|all] --output_path <path>
++#   test.sh --mode <base|new|all> --output_path <path>
++#
++#   base -> run only the pre-existing (baseline) tests
++#   new  -> run only the tests added by this problem
++#   all  -> run baseline + new (default)
++#
++# Writes JUnit XML to <path> via mocha's xunit reporter and exits with mocha's
++# own status. No packages are installed here (the Dockerfile installs the test
++# tools) and no network is used.
++set -u
++
++MODE="all"
++OUTPUT_PATH=""
++
++while [ $# -gt 0 ]; do
++  case "$1" in
++    --mode) MODE="$2"; shift 2 ;;
++    --mode=*) MODE="${1#*=}"; shift ;;
++    base|new|all) MODE="$1"; shift ;;
++    --output_path) OUTPUT_PATH="$2"; shift 2 ;;
++    --output_path=*) OUTPUT_PATH="${1#*=}"; shift ;;
++    *) shift ;;
++  esac
++done
++
++if [ -z "$OUTPUT_PATH" ]; then
++  echo "usage: test.sh [base|new|all] --output_path <path>" >&2
++  exit 2
++fi
++
++# The test runner (mocha) and assertion libs (chai, chai-as-promised) are
++# installed at build time. Restore the build-time copy if the working tree's
++# node_modules was reset before patches were applied (a plain copy, no network).
++if [ ! -d node_modules ] && [ -d /opt/node_modules_cache ]; then
++  cp -r /opt/node_modules_cache node_modules
++fi
++
++NEW_TEST="test/keys_nonobject_c4e91a.js"
++NEW_BASE="$(basename "$NEW_TEST")"
++# Registers chai-as-promised; loaded via --require so promise assertions work
++# for any file subset without depending on test-file ordering.
++SETUP="test/chai_setup_c4e91a.js"
++
++# Baseline test files that run fully offline: exclude the new file, the setup
++# helper, and async-function.js (its "HTTP request" tests reach the network).
++self_contained() {
++  ls test/*.js | grep -v "$NEW_BASE" | grep -v "$(basename "$SETUP")" | grep -v 'async-function.js'
++}
++
++case "$MODE" in
++  new)
++    FILES="$NEW_TEST"
++    ;;
++  base)
++    FILES="$(self_contained)"
++    ;;
++  *)
++    FILES="$(self_contained) $NEW_TEST"
++    ;;
++esac
++
++# Resolve mocha from local node_modules, a global install, or offline npx.
++if [ -x node_modules/.bin/mocha ]; then
++  MOCHA="node_modules/.bin/mocha"
++elif command -v mocha >/dev/null 2>&1; then
++  MOCHA="mocha"
++else
++  MOCHA="npx --no-install mocha"
++fi
++
++# A generous per-test timeout: jsonata's async test-suite cases can exceed
++# mocha's 2s default on slower machines.
++$MOCHA --timeout 60000 --require "./$SETUP" $FILES --reporter xunit --reporter-options output="$OUTPUT_PATH"
++exit $?
+diff --git a/test/chai_setup_c4e91a.js b/test/chai_setup_c4e91a.js
+new file mode 100644
+index 0000000..2e82fba
+--- /dev/null
++++ b/test/chai_setup_c4e91a.js
+@@ -0,0 +1,9 @@
++"use strict";
++
++// Register chai-as-promised globally so promise assertions (e.g. `.rejected`,
++// `.eventually`) work regardless of which subset of test files is run. In the
++// upstream suite this happens as a side effect of the first test file that runs;
++// this setup makes it independent of file selection and ordering.
++var chai = require("chai");
++var chaiAsPromised = require("chai-as-promised");
++chai.use(chaiAsPromised);
+diff --git a/test/keys_nonobject_c4e91a.js b/test/keys_nonobject_c4e91a.js
+new file mode 100644
+index 0000000..2f4dfaf
+--- /dev/null
++++ b/test/keys_nonobject_c4e91a.js
+@@ -0,0 +1,60 @@
++"use strict";
++
++var jsonata = require('../src/jsonata');
++var chai = require("chai");
++var expect = chai.expect;
++var chaiAsPromised = require("chai-as-promised");
++chai.use(chaiAsPromised);
++
++function evaluate(expr, data) {
++    return jsonata(expr).evaluate(data);
++}
++
++// Regression: functions that iterate an object's keys must treat a
++// non-object (undefined) argument as having no keys, returning undefined,
++// rather than throwing "Cannot convert undefined or null to object".
++describe('object-key iteration over a non-object', function () {
++
++    describe('$each', function () {
++        it('returns undefined for an undefined argument', function () {
++            return expect(evaluate('$each($missing, function($v, $k){ $v })'))
++                .to.eventually.equal(undefined);
++        });
++
++        it('returns undefined when the argument path is absent', function () {
++            return expect(evaluate('$each(input.data, function($v, $k){ $v })', { input: {} }))
++                .to.eventually.equal(undefined);
++        });
++
++        it('still returns the values for a real object', function () {
++            return expect(evaluate('$each({"a": 1, "b": 2}, function($v, $k){ $v })'))
++                .to.eventually.deep.equal([1, 2]);
++        });
++    });
++
++    describe('$sift', function () {
++        it('returns undefined for an undefined argument', function () {
++            return expect(evaluate('$sift($missing, function($v){ $v > 1 })'))
++                .to.eventually.equal(undefined);
++        });
++
++        it('still filters the entries of a real object', function () {
++            return expect(evaluate('$sift({"a": 1, "b": 5}, function($v){ $v > 3 })'))
++                .to.eventually.deep.equal({ b: 5 });
++        });
++    });
++
++    describe('other key-based functions tolerate a non-object', function () {
++        it('$keys returns undefined for an undefined argument', function () {
++            return expect(evaluate('$keys($missing)')).to.eventually.equal(undefined);
++        });
++
++        it('$spread returns undefined for an undefined argument', function () {
++            return expect(evaluate('$spread($missing)')).to.eventually.equal(undefined);
++        });
++
++        it('$merge returns undefined for an undefined argument', function () {
++            return expect(evaluate('$merge($missing)')).to.eventually.equal(undefined);
++        });
++    });
++});
