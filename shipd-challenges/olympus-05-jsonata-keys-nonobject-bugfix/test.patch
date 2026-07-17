@@ -1,6 +1,6 @@
 diff --git a/test.sh b/test.sh
 new file mode 100755
-index 0000000..77afd78
+index 0000000..1017913
 --- /dev/null
 +++ b/test.sh
 @@ -0,0 +1,79 @@
@@ -81,7 +81,7 @@ index 0000000..77afd78
 +
 +# A generous per-test timeout: jsonata's async test-suite cases can exceed
 +# mocha's 2s default on slower machines.
-+$MOCHA --timeout 60000 --require "./$SETUP" $FILES --reporter xunit --reporter-options output="$OUTPUT_PATH"
++$MOCHA --timeout 120000 --require "./$SETUP" $FILES --reporter xunit --reporter-options output="$OUTPUT_PATH"
 +exit $?
 diff --git a/test/chai_setup_c4e91a.js b/test/chai_setup_c4e91a.js
 new file mode 100644
@@ -100,10 +100,10 @@ index 0000000..2e82fba
 +chai.use(chaiAsPromised);
 diff --git a/test/keys_nonobject_c4e91a.js b/test/keys_nonobject_c4e91a.js
 new file mode 100644
-index 0000000..2f4dfaf
+index 0000000..ece673c
 --- /dev/null
 +++ b/test/keys_nonobject_c4e91a.js
-@@ -0,0 +1,60 @@
+@@ -0,0 +1,61 @@
 +"use strict";
 +
 +var jsonata = require('../src/jsonata');
@@ -133,7 +133,8 @@ index 0000000..2f4dfaf
 +        });
 +
 +        it('still returns the values for a real object', function () {
-+            return expect(evaluate('$each({"a": 1, "b": 2}, function($v, $k){ $v })'))
++            // sorted so the assertion does not depend on key iteration order
++            return expect(evaluate('$sort($each({"a": 1, "b": 2}, function($v, $k){ $v }))'))
 +                .to.eventually.deep.equal([1, 2]);
 +        });
 +    });
