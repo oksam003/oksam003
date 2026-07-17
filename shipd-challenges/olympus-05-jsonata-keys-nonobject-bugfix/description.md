@@ -1,4 +1,4 @@
-Several JSONata functions that iterate over an object's keys throw a TypeError when their argument is a non-object (for example `undefined`), instead of treating it as having no keys and returning `undefined`.
+Several JSONata functions that iterate over an object's keys throw a TypeError when their argument is `undefined` (for example, a path that does not match anything), instead of treating it as having no keys and returning `undefined`.
 
 ## Reproduce
 
@@ -18,7 +18,7 @@ Cannot convert undefined or null to object
 
 ## Expected
 
-When the argument is a non-object (undefined or null), the functions that walk an object's keys should behave as if it had no keys: the expression evaluates to `undefined` rather than throwing. Evaluating against a real object must keep working exactly as before.
+When the argument is `undefined`, the functions that walk an object's keys should behave as if it had no keys: the expression evaluates to `undefined` rather than throwing. Evaluating against a real object must keep working exactly as before.
 
 ## Notes
 
