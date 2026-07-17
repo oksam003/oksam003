@@ -6,8 +6,9 @@ Solutions and work for **Shipd** coding challenges — organized by track.
 
 | # | Challenge | Language | Status | Notes |
 |---|-----------|----------|--------|-------|
-| 03 | [markdown-it abbreviations](olympus-03-markdown-it-abbreviations/) | JavaScript | ✅ verified · multi-subsystem · **recommended** | Add core `<abbr>` support to markdown-it/markdown-it @ `2d9bbea`. Solution spans block parser + core token-rewrite (4 files). Differentiated from footnotes to clear the plagiarism warning; offline `node --test` JUnit; verified base pass / new fail → all pass |
-| 02 | [markdown-it footnotes](olympus-02-markdown-it-footnotes/) | JavaScript | ⚠️ plagiarism-flagged | Core footnote support (8 files, block/inline/core/renderer). Passes all checks except the similarity check (footnotes collides with an existing submission). Use olympus-03 instead |
+| 04 | [jsonata $takeWhile / $dropWhile](olympus-04-jsonata-takewhile-dropwhile/) | JavaScript | ✅ verified · multi-subsystem · **recommended** | Add two higher-order functions to jsonata-js/jsonata @ `6c7e95f` (2.6k★, MIT, active). Solution spans function library + evaluator runtime binding. **New repo** (markdown-it had prior submissions); offline mocha JUnit; verified base pass / new fail → all pass |
+| 03 | [markdown-it abbreviations](olympus-03-markdown-it-abbreviations/) | JavaScript | ⚠️ repo has prior submissions | Core `<abbr>` support (block + core, 4 files). Verified, but markdown-it tasks were flagged as previously submitted. Use olympus-04 instead |
+| 02 | [markdown-it footnotes](olympus-02-markdown-it-footnotes/) | JavaScript | ⚠️ prior submission (footnotes) | Core footnote support (8 files). Superseded by olympus-04 |
 | 01 | [Fraction.js rational approximation](olympus-01-fraction-js-rational-approximation/) | JavaScript | ⚠️ better for non-Olympus | Add `approximate()` + `convergents()` to rawify/Fraction.js @ `9aa0f35`. Passes prechecks but single-file, so fails Olympus long-horizon (multi-subsystem). Good for a lower track |
 
 ## 🔴 Mars

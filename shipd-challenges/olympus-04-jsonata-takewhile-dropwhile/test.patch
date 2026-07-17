@@ -1,0 +1,155 @@
+diff --git a/test.sh b/test.sh
+new file mode 100755
+index 0000000..c01b3af
+--- /dev/null
++++ b/test.sh
+@@ -0,0 +1,74 @@
++#!/usr/bin/env bash
++# Shipd test runner for jsonata.
++#
++# Usage:
++#   test.sh [base|new|all] --output_path <path>
++#   test.sh --mode <base|new|all> --output_path <path>
++#
++#   base -> run only the pre-existing (baseline) tests
++#   new  -> run only the tests added by this problem
++#   all  -> run baseline + new (default)
++#
++# Writes JUnit XML to <path> via mocha's xunit reporter and exits with mocha's
++# own status. No packages are installed here (the Dockerfile installs the test
++# tools) and no network is used.
++set -u
++
++MODE="all"
++OUTPUT_PATH=""
++
++while [ $# -gt 0 ]; do
++  case "$1" in
++    --mode) MODE="$2"; shift 2 ;;
++    --mode=*) MODE="${1#*=}"; shift ;;
++    base|new|all) MODE="$1"; shift ;;
++    --output_path) OUTPUT_PATH="$2"; shift 2 ;;
++    --output_path=*) OUTPUT_PATH="${1#*=}"; shift ;;
++    *) shift ;;
++  esac
++done
++
++if [ -z "$OUTPUT_PATH" ]; then
++  echo "usage: test.sh [base|new|all] --output_path <path>" >&2
++  exit 2
++fi
++
++# The test runner (mocha) and assertion libs (chai, chai-as-promised) are
++# installed at build time. Restore the build-time copy if the working tree's
++# node_modules was reset before patches were applied (a plain copy, no network).
++if [ ! -d node_modules ] && [ -d /opt/node_modules_cache ]; then
++  cp -r /opt/node_modules_cache node_modules
++fi
++
++NEW_TEST="test/hof_runs_7b3f21.js"
++NEW_BASE="$(basename "$NEW_TEST")"
++
++# Baseline test files that run fully offline: exclude the new file and
++# async-function.js (its "HTTP request" tests reach the network).
++self_contained() {
++  ls test/*.js | grep -v "$NEW_BASE" | grep -v 'async-function.js'
++}
++
++case "$MODE" in
++  new)
++    FILES="$NEW_TEST"
++    ;;
++  base)
++    FILES="$(self_contained)"
++    ;;
++  *)
++    FILES="$(self_contained) $NEW_TEST"
++    ;;
++esac
++
++# Resolve mocha from local node_modules, a global install, or offline npx.
++if [ -x node_modules/.bin/mocha ]; then
++  MOCHA="node_modules/.bin/mocha"
++elif command -v mocha >/dev/null 2>&1; then
++  MOCHA="mocha"
++else
++  MOCHA="npx --no-install mocha"
++fi
++
++$MOCHA $FILES --reporter xunit --reporter-options output="$OUTPUT_PATH"
++exit $?
+diff --git a/test/hof_runs_7b3f21.js b/test/hof_runs_7b3f21.js
+new file mode 100644
+index 0000000..8cbf0e5
+--- /dev/null
++++ b/test/hof_runs_7b3f21.js
+@@ -0,0 +1,69 @@
++"use strict";
++
++var jsonata = require('../src/jsonata');
++var chai = require("chai");
++var expect = chai.expect;
++var chaiAsPromised = require("chai-as-promised");
++chai.use(chaiAsPromised);
++
++function evaluate(expr, data) {
++    return jsonata(expr).evaluate(data);
++}
++
++describe('$takeWhile', function () {
++    it('returns the leading run where the predicate holds', function () {
++        return expect(evaluate('$takeWhile([1,2,3,4,1,2], function($x){ $x < 4 })'))
++            .to.eventually.deep.equal([1, 2, 3]);
++    });
++
++    it('stops at the first falsy result even if a later element would pass', function () {
++        // single remaining element is returned as a scalar (jsonata sequence semantics)
++        return expect(evaluate('$takeWhile([1,5,2], function($x){ $x < 3 })'))
++            .to.eventually.equal(1);
++    });
++
++    it('passes the element index as the second argument', function () {
++        return expect(evaluate('$takeWhile([10,20,30], function($v,$i){ $i < 2 })'))
++            .to.eventually.deep.equal([10, 20]);
++    });
++
++    it('returns nothing when the first element fails', function () {
++        return expect(evaluate('$takeWhile([1,2,3], function($x){ $x > 100 })'))
++            .to.eventually.equal(undefined);
++    });
++
++    it('returns undefined for undefined input', function () {
++        return expect(evaluate('$takeWhile($missing, function($x){ true })'))
++            .to.eventually.equal(undefined);
++    });
++});
++
++describe('$dropWhile', function () {
++    it('drops the leading run where the predicate holds', function () {
++        return expect(evaluate('$dropWhile([1,2,3,4,1,2], function($x){ $x < 4 })'))
++            .to.eventually.deep.equal([4, 1, 2]);
++    });
++
++    it('keeps everything once the predicate first fails', function () {
++        return expect(evaluate('$dropWhile([1,5,2], function($x){ $x < 3 })'))
++            .to.eventually.deep.equal([5, 2]);
++    });
++
++    it('drops everything when the predicate always holds', function () {
++        return expect(evaluate('$dropWhile([1,2], function($x){ $x < 100 })'))
++            .to.eventually.equal(undefined);
++    });
++
++    it('returns undefined for undefined input', function () {
++        return expect(evaluate('$dropWhile($missing, function($x){ true })'))
++            .to.eventually.equal(undefined);
++    });
++
++    it('is the complement of $takeWhile', function () {
++        // takeWhile followed by dropWhile reconstructs the original array
++        return expect(evaluate(
++            '$append($takeWhile([1,2,3,4,1], function($x){ $x < 4 }), ' +
++            '$dropWhile([1,2,3,4,1], function($x){ $x < 4 }))'
++        )).to.eventually.deep.equal([1, 2, 3, 4, 1]);
++    });
++});

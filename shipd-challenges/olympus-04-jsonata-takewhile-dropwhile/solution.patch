@@ -1,0 +1,93 @@
+diff --git a/src/functions.js b/src/functions.js
+index da0479e..b1a5c4b 100644
+--- a/src/functions.js
++++ b/src/functions.js
+@@ -1530,6 +1530,66 @@ const functions = (() => {
+         return result;
+     }
+ 
++    /**
++     * Return the leading elements of an array while a predicate holds
++     * @param {Array} [arr] - array to take from
++     * @param {Function} [func] - predicate function
++     * @returns {Array} the longest leading run for which func is truthy
++     */
++    async function takeWhile(arr, func) {
++        // undefined inputs always return undefined
++        if (typeof arr === 'undefined') {
++            return undefined;
++        }
++
++        var result = this.createSequence();
++
++        for (var i = 0; i < arr.length; i++) {
++            var entry = arr[i];
++            var func_args = hofFuncArgs(func, entry, i, arr);
++            // invoke func
++            var res = await func.apply(this, func_args);
++            if (!boolean(res)) {
++                break;
++            }
++            result.push(entry);
++        }
++
++        return result;
++    }
++
++    /**
++     * Drop the leading elements of an array while a predicate holds
++     * @param {Array} [arr] - array to drop from
++     * @param {Function} [func] - predicate function
++     * @returns {Array} the remaining elements once func first becomes falsy
++     */
++    async function dropWhile(arr, func) {
++        // undefined inputs always return undefined
++        if (typeof arr === 'undefined') {
++            return undefined;
++        }
++
++        var result = this.createSequence();
++        var dropping = true;
++
++        for (var i = 0; i < arr.length; i++) {
++            var entry = arr[i];
++            if (dropping) {
++                var func_args = hofFuncArgs(func, entry, i, arr);
++                // invoke func
++                var res = await func.apply(this, func_args);
++                if (boolean(res)) {
++                    continue;
++                }
++                dropping = false;
++            }
++            result.push(entry);
++        }
++
++        return result;
++    }
++
+     /**
+      * Given an array, find the single element matching a specified condition
+      * Throws an exception if the number of matching elements is not exactly one
+@@ -2082,7 +2142,7 @@ const functions = (() => {
+         match, contains, replace, split, join,
+         formatNumber, formatBase, number, floor, ceil, round, abs, sqrt, power, random,
+         boolean, not,
+-        map, zip, filter, single, foldLeft, sift,
++        map, zip, filter, takeWhile, dropWhile, single, foldLeft, sift,
+         keys, lookup, append, exists, spread, merge, reverse, each, error, assert, type, sort, shuffle, distinct,
+         base64encode, base64decode,  encodeUrlComponent, encodeUrl, decodeUrlComponent, decodeUrl
+     };
+diff --git a/src/jsonata.js b/src/jsonata.js
+index 184de40..70467e4 100644
+--- a/src/jsonata.js
++++ b/src/jsonata.js
+@@ -1942,6 +1942,8 @@ var jsonata = (function() {
+     staticFrame.bind('map', defineFunction(fn.map, '<af>'));
+     staticFrame.bind('zip', defineFunction(fn.zip, '<a+>'));
+     staticFrame.bind('filter', defineFunction(fn.filter, '<af>'));
++    staticFrame.bind('takeWhile', defineFunction(fn.takeWhile, '<af>'));
++    staticFrame.bind('dropWhile', defineFunction(fn.dropWhile, '<af>'));
+     staticFrame.bind('single', defineFunction(fn.single, '<af?>'));
+     staticFrame.bind('reduce', defineFunction(fn.foldLeft, '<afj?:j>')); // TODO <f<jj:j>a<j>j?:j>
+     staticFrame.bind('sift', defineFunction(fn.sift, '<o-f?:o>'));
